@@ -6,9 +6,13 @@
 namespace Rml::meta
 {
 template<typename GL>
-concept OpenGL33Context = requires(GL gl, float f) {
-    { gl.ClearColor(f, f, f, f) } -> std::same_as<void>;
-};
+concept OpenGL33Context =
+        requires(
+                GL    gl,
+                float f
+        ) {
+            { gl.ClearColor(f, f, f, f) } -> std::same_as<void>;
+        };
 
 template<typename GL>
 concept OpenGL33ContextForward = std::is_class_v<GL>;
@@ -93,9 +97,10 @@ struct RendererOpenGL33 : public Rml::RenderInterface
     void
     ReleaseShader(CompiledShaderHandle shader) override;
 
-  protected:
+  private:
 
-    Gl_Context_Provider get_gl_;
+    struct Impl;
+    std::unique_ptr<Impl> pimpl_;
 };
 } // namespace Rml
 

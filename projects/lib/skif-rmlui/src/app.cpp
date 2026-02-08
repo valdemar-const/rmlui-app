@@ -73,9 +73,10 @@ App::run(void)
     // init RmlUi
     render_impl.reset(
             new Rml::RendererGlad33(
-                    [&](void) -> GladGLContext *
+                    [w = main,gl = gl.get()](void) -> GladGLContext *
                     {
-                        return gl.get();
+                        glfwMakeContextCurrent(w);
+                        return gl;
                     }
             )
     );
