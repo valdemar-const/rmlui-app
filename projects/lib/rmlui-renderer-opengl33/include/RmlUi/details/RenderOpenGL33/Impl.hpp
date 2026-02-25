@@ -111,14 +111,13 @@ struct RendererOpenGL33<GL>::Impl
     void UseProgram(ProgramId program_id);
     void SubmitTransformUniform(Vector2f translation);
     void UpdateViewportState(void);
+    void SetScissor(Rectanglei region);
 
     static CompiledGeometryData *ToGeometry(CompiledGeometryHandle geometry);
     static CompiledGeometryHandle ToHandle(CompiledGeometryData *geometry);
 
     static TextureHandle ToTextureHandle(GLuint_t texture_id);
     static GLuint_t      ToTextureId(TextureHandle texture);
-
-    static Rectanglei VerticallyFlipped(Rectanglei rect, int viewport_height);
 
     static constexpr size_t kMaxPrograms = 8;
 
@@ -135,18 +134,13 @@ struct RendererOpenGL33<GL>::Impl
     bool     has_local_transform_ = false;
 
     Rectanglei scissor_state_ = Rectanglei::MakeInvalid();
-    bool       scissor_enabled_ = false;
 
     int viewport_x_      = 0;
     int viewport_y_      = 0;
     int viewport_width_  = 1;
     int viewport_height_ = 1;
 
-  protected:
-
     Gl_Context_Provider get_gl_;
-
-  protected:
 };
 
 } // namespace Rml

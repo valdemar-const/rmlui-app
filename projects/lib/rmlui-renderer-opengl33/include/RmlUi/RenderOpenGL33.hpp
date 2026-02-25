@@ -142,7 +142,7 @@ struct RendererOpenGL33 : public Rml::RenderInterface
     CompileShader(const String &name, const Dictionary &parameters) override;
 
     void
-    RenderShader(CompiledShaderHandle shader, CompiledGeometryHandle geometry, Vector2f translation, TextureHandle texture);
+    RenderShader(CompiledShaderHandle shader, CompiledGeometryHandle geometry, Vector2f translation, TextureHandle texture) override;
 
     void
     ReleaseShader(CompiledShaderHandle shader) override;

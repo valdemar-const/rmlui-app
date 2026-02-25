@@ -16,65 +16,65 @@ namespace Rml
 
 namespace
 {
+// GL enum constants wrapped as dependent variable templates for ODR-isolation in .inl.
+// NOTE: The TU that triggers instantiation MUST include the appropriate GL header
+// (e.g. <glad/gl.h>) before this file is transitively included.
 template<typename GL>
-static constexpr unsigned int kGlVertexShader = GL_VERTEX_SHADER;
+constexpr unsigned int kGlVertexShader = GL_VERTEX_SHADER;
 template<typename GL>
-static constexpr unsigned int kGlFragmentShader = GL_FRAGMENT_SHADER;
+constexpr unsigned int kGlFragmentShader = GL_FRAGMENT_SHADER;
 template<typename GL>
-static constexpr unsigned int kGlCompileStatus = GL_COMPILE_STATUS;
+constexpr unsigned int kGlCompileStatus = GL_COMPILE_STATUS;
 template<typename GL>
-static constexpr unsigned int kGlInfoLogLength = GL_INFO_LOG_LENGTH;
+constexpr unsigned int kGlInfoLogLength = GL_INFO_LOG_LENGTH;
 template<typename GL>
-static constexpr unsigned int kGlLinkStatus = GL_LINK_STATUS;
+constexpr unsigned int kGlLinkStatus = GL_LINK_STATUS;
 
 template<typename GL>
-static constexpr unsigned int kGlArrayBuffer = GL_ARRAY_BUFFER;
+constexpr unsigned int kGlArrayBuffer = GL_ARRAY_BUFFER;
 template<typename GL>
-static constexpr unsigned int kGlElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER;
+constexpr unsigned int kGlElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER;
 template<typename GL>
-static constexpr unsigned int kGlStaticDraw = GL_STATIC_DRAW;
+constexpr unsigned int kGlStaticDraw = GL_STATIC_DRAW;
 
 template<typename GL>
-static constexpr unsigned int kGlTriangles = GL_TRIANGLES;
+constexpr unsigned int kGlTriangles = GL_TRIANGLES;
 template<typename GL>
-static constexpr unsigned int kGlUnsignedInt = GL_UNSIGNED_INT;
+constexpr unsigned int kGlUnsignedInt = GL_UNSIGNED_INT;
 template<typename GL>
-static constexpr unsigned int kGlFloat = GL_FLOAT;
+constexpr unsigned int kGlFloat = GL_FLOAT;
 template<typename GL>
-static constexpr unsigned int kGlUnsignedByte = GL_UNSIGNED_BYTE;
+constexpr unsigned int kGlUnsignedByte = GL_UNSIGNED_BYTE;
 template<typename GL>
-static constexpr unsigned int kGlFalse = GL_FALSE;
+constexpr unsigned int kGlFalse = GL_FALSE;
 template<typename GL>
-static constexpr unsigned int kGlTrue = GL_TRUE;
+constexpr unsigned int kGlTrue = GL_TRUE;
 
 template<typename GL>
-static constexpr unsigned int kGlTexture2D = GL_TEXTURE_2D;
+constexpr unsigned int kGlTexture2D = GL_TEXTURE_2D;
 template<typename GL>
-static constexpr unsigned int kGlRgba8 = GL_RGBA8;
+constexpr unsigned int kGlRgba8 = GL_RGBA8;
 template<typename GL>
-static constexpr unsigned int kGlRgba = GL_RGBA;
+constexpr unsigned int kGlRgba = GL_RGBA;
 template<typename GL>
-static constexpr unsigned int kGlLinear = GL_LINEAR;
+constexpr unsigned int kGlLinear = GL_LINEAR;
 template<typename GL>
-static constexpr unsigned int kGlRepeat = GL_REPEAT;
+constexpr unsigned int kGlRepeat = GL_REPEAT;
 template<typename GL>
-static constexpr unsigned int kGlTextureMinFilter = GL_TEXTURE_MIN_FILTER;
+constexpr unsigned int kGlTextureMinFilter = GL_TEXTURE_MIN_FILTER;
 template<typename GL>
-static constexpr unsigned int kGlTextureMagFilter = GL_TEXTURE_MAG_FILTER;
+constexpr unsigned int kGlTextureMagFilter = GL_TEXTURE_MAG_FILTER;
 template<typename GL>
-static constexpr unsigned int kGlTextureWrapS = GL_TEXTURE_WRAP_S;
+constexpr unsigned int kGlTextureWrapS = GL_TEXTURE_WRAP_S;
 template<typename GL>
-static constexpr unsigned int kGlTextureWrapT = GL_TEXTURE_WRAP_T;
+constexpr unsigned int kGlTextureWrapT = GL_TEXTURE_WRAP_T;
 
 template<typename GL>
-static constexpr unsigned int kGlScissorTest = GL_SCISSOR_TEST;
+constexpr unsigned int kGlScissorTest = GL_SCISSOR_TEST;
 template<typename GL>
-static constexpr unsigned int kGlViewport = GL_VIEWPORT;
+constexpr unsigned int kGlViewport = GL_VIEWPORT;
 
-template<typename GL>
-const char *VertexShaderMain(void)
-{
-    return R"(
+inline constexpr const char *kVertexShaderMain = R"(
 #version 330
 uniform vec2 _translate;
 uniform mat4 _transform;
@@ -96,12 +96,8 @@ void main() {
     gl_Position = outPos;
 }
 )";
-}
 
-template<typename GL>
-const char *FragmentShaderColor(void)
-{
-    return R"(
+inline constexpr const char *kFragmentShaderColor = R"(
 #version 330
 in vec2 fragTexCoord;
 in vec4 fragColor;
@@ -112,12 +108,8 @@ void main() {
     finalColor = fragColor;
 }
 )";
-}
 
-template<typename GL>
-const char *FragmentShaderTexture(void)
-{
-    return R"(
+inline constexpr const char *kFragmentShaderTexture = R"(
 #version 330
 uniform sampler2D _tex;
 in vec2 fragTexCoord;
@@ -130,7 +122,28 @@ void main() {
     finalColor = fragColor * texColor;
 }
 )";
-}
+
+// TGA header — binary layout, must match on-disk format exactly.
+// #pragma pack is supported by GCC, Clang, and MSVC.
+#pragma pack(push, 1)
+struct TgaHeader
+{
+    char      id_length;
+    char      color_map_type;
+    char      data_type;
+    short int color_map_origin;
+    short int color_map_length;
+    char      color_map_depth;
+    short int x_origin;
+    short int y_origin;
+    short int width;
+    short int height;
+    char      bits_per_pixel;
+    char      image_descriptor;
+};
+#pragma pack(pop)
+static_assert(sizeof(TgaHeader) == 18, "TgaHeader must be exactly 18 bytes to match TGA on-disk format.");
+
 } // namespace
 
 template<meta::OpenGL33ContextForward GL>
@@ -141,7 +154,7 @@ inline RendererOpenGL33<GL>::Impl::~Impl()
 
 template<meta::OpenGL33ContextForward GL>
 inline RendererOpenGL33<GL>::Impl::Impl(Gl_Context_Provider get_gl)
-    : get_gl_(get_gl)
+    : get_gl_(std::move(get_gl))
 {
     if (!get_gl_)
     {
@@ -153,6 +166,8 @@ inline RendererOpenGL33<GL>::Impl::Impl(Gl_Context_Provider get_gl)
         throw std::runtime_error("Cannot initialize OpenGL programs for RendererOpenGL33");
     }
 
+    // Initialize projection from current viewport and set identity transform.
+    UpdateViewportState();
     SetTransform(nullptr);
 }
 
@@ -223,7 +238,8 @@ RendererOpenGL33<GL>::Impl::RenderGeometry(CompiledGeometryHandle geometry, Vect
         return;
     }
 
-    // Keep projection in sync with dynamic viewport changes (window resize, DPI changes).
+    // Lazily sync projection with the current GL viewport (handles window resize, DPI changes).
+    // The actual recalculation only happens when the viewport dimensions change.
     UpdateViewportState();
 
     auto *compiled_geometry = ToGeometry(geometry);
@@ -244,6 +260,9 @@ RendererOpenGL33<GL>::Impl::RenderGeometry(CompiledGeometryHandle geometry, Vect
     gl.BindVertexArray(compiled_geometry->vao);
     gl.DrawElements(kGlTriangles<GL>, compiled_geometry->draw_count, kGlUnsignedInt<GL>, nullptr);
     gl.BindVertexArray(0);
+
+    // Unbind texture to leave clean GL state for subsequent calls.
+    gl.BindTexture(kGlTexture2D<GL>, 0);
 }
 
 template<meta::OpenGL33ContextForward GL>
@@ -287,22 +306,6 @@ RendererOpenGL33<GL>::Impl::LoadTexture(Vector2i &texture_dimensions, const Stri
     const size_t file_size = file_interface->Tell(file);
     file_interface->Seek(file, 0, SEEK_SET);
 
-    struct TgaHeader
-    {
-        char      id_length;
-        char      color_map_type;
-        char      data_type;
-        short int color_map_origin;
-        short int color_map_length;
-        char      color_map_depth;
-        short int x_origin;
-        short int y_origin;
-        short int width;
-        short int height;
-        char      bits_per_pixel;
-        char      image_descriptor;
-    };
-
     if (file_size <= sizeof(TgaHeader))
     {
         Log::Message(Log::LT_ERROR, "Texture file '%s' is too small for TGA header.", source.c_str());
@@ -338,6 +341,16 @@ RendererOpenGL33<GL>::Impl::LoadTexture(Vector2i &texture_dimensions, const Stri
         return {};
     }
 
+    // Validate that the file contains enough pixel data.
+    const size_t expected_pixel_data_size = static_cast<size_t>(width) * static_cast<size_t>(height) * static_cast<size_t>(bytes_per_pixel);
+    const size_t available_pixel_data     = file_size - sizeof(TgaHeader);
+    if (available_pixel_data < expected_pixel_data_size)
+    {
+        Log::Message(Log::LT_ERROR, "Texture '%s': file truncated, expected %zu bytes of pixel data but only %zu available.",
+                     source.c_str(), expected_pixel_data_size, available_pixel_data);
+        return {};
+    }
+
     const size_t pixels_rgba_size = static_cast<size_t>(width) * static_cast<size_t>(height) * 4u;
     std::vector<byte> rgba_pixels(pixels_rgba_size);
 
@@ -356,6 +369,7 @@ RendererOpenGL33<GL>::Impl::LoadTexture(Vector2i &texture_dimensions, const Stri
             byte b = src[src_index + 0];
             byte a = (bytes_per_pixel == 4 ? src[src_index + 3] : byte(255));
 
+            // Premultiply alpha.
             r = static_cast<byte>((static_cast<unsigned int>(r) * static_cast<unsigned int>(a)) / 255u);
             g = static_cast<byte>((static_cast<unsigned int>(g) * static_cast<unsigned int>(a)) / 255u);
             b = static_cast<byte>((static_cast<unsigned int>(b) * static_cast<unsigned int>(a)) / 255u);
@@ -430,17 +444,11 @@ template<meta::OpenGL33ContextForward GL>
 inline void
 RendererOpenGL33<GL>::Impl::EnableScissorRegion(bool enable)
 {
-    auto &gl = *get_gl_();
-
-    scissor_enabled_ = enable;
-
-    if (enable)
+    // Following the reference implementation pattern:
+    // enable=true is always immediately followed by SetScissorRegion(), so we only act on disable.
+    if (!enable)
     {
-        gl.Enable(kGlScissorTest<GL>);
-    }
-    else
-    {
-        gl.Disable(kGlScissorTest<GL>);
+        SetScissor(Rectanglei::MakeInvalid());
     }
 }
 
@@ -448,49 +456,23 @@ template<meta::OpenGL33ContextForward GL>
 inline void
 RendererOpenGL33<GL>::Impl::SetScissorRegion(Rectanglei region)
 {
-    auto &gl = *get_gl_();
-
-    UpdateViewportState();
-
-    if (!region.Valid())
-    {
-        scissor_state_ = Rectanglei::MakeInvalid();
-        if (!scissor_enabled_)
-        {
-            gl.Disable(kGlScissorTest<GL>);
-        }
-        return;
-    }
-
-    const int x = Math::Clamp(region.Left(), 0, viewport_width_);
-    const int y = Math::Clamp(viewport_height_ - region.Bottom(), 0, viewport_height_);
-    const int w = Math::Clamp(region.Width(), 0, viewport_width_);
-    const int h = Math::Clamp(region.Height(), 0, viewport_height_);
-
-    gl.Scissor(x, y, w, h);
-    scissor_state_ = region;
-
-    if (scissor_enabled_)
-    {
-        gl.Enable(kGlScissorTest<GL>);
-    }
+    SetScissor(region);
 }
 
 template<meta::OpenGL33ContextForward GL>
 inline void
-RendererOpenGL33<GL>::Impl::EnableClipMask(bool enable)
+RendererOpenGL33<GL>::Impl::EnableClipMask([[maybe_unused]] bool enable)
 {
-    (void)enable;
     Log::Message(Log::LT_WARNING, "RendererOpenGL33 MVP: EnableClipMask is not implemented.");
 }
 
 template<meta::OpenGL33ContextForward GL>
 inline void
-RendererOpenGL33<GL>::Impl::RenderToClipMask(ClipMaskOperation operation, CompiledGeometryHandle geometry, Vector2f translation)
+RendererOpenGL33<GL>::Impl::RenderToClipMask(
+        [[maybe_unused]] ClipMaskOperation operation,
+        [[maybe_unused]] CompiledGeometryHandle geometry,
+        [[maybe_unused]] Vector2f translation)
 {
-    (void)operation;
-    (void)geometry;
-    (void)translation;
     Log::Message(Log::LT_WARNING, "RendererOpenGL33 MVP: RenderToClipMask is not implemented.");
 }
 
@@ -501,7 +483,6 @@ RendererOpenGL33<GL>::Impl::SetTransform(const Matrix4f *transform)
     has_local_transform_ = (transform != nullptr);
     local_transform_     = (transform ? *transform : Matrix4f::Identity());
 
-    UpdateViewportState();
     transform_ = projection_ * local_transform_;
     program_transform_dirty_.set();
 }
@@ -516,12 +497,12 @@ RendererOpenGL33<GL>::Impl::PushLayer()
 
 template<meta::OpenGL33ContextForward GL>
 inline void
-RendererOpenGL33<GL>::Impl::CompositeLayers(LayerHandle source, LayerHandle destination, BlendMode blend_mode, Span<const CompiledFilterHandle> filters)
+RendererOpenGL33<GL>::Impl::CompositeLayers(
+        [[maybe_unused]] LayerHandle source,
+        [[maybe_unused]] LayerHandle destination,
+        [[maybe_unused]] BlendMode blend_mode,
+        [[maybe_unused]] Span<const CompiledFilterHandle> filters)
 {
-    (void)source;
-    (void)destination;
-    (void)blend_mode;
-    (void)filters;
     Log::Message(Log::LT_WARNING, "RendererOpenGL33 MVP: CompositeLayers is not implemented.");
 }
 
@@ -550,47 +531,45 @@ RendererOpenGL33<GL>::Impl::SaveLayerAsMaskImage()
 
 template<meta::OpenGL33ContextForward GL>
 inline CompiledFilterHandle
-RendererOpenGL33<GL>::Impl::CompileFilter(const String &name, const Dictionary &parameters)
+RendererOpenGL33<GL>::Impl::CompileFilter(
+        [[maybe_unused]] const String &name,
+        [[maybe_unused]] const Dictionary &parameters)
 {
-    (void)name;
-    (void)parameters;
     Log::Message(Log::LT_WARNING, "RendererOpenGL33 MVP: CompileFilter is not implemented.");
     return {};
 }
 
 template<meta::OpenGL33ContextForward GL>
 inline void
-RendererOpenGL33<GL>::Impl::ReleaseFilter(CompiledFilterHandle filter)
+RendererOpenGL33<GL>::Impl::ReleaseFilter([[maybe_unused]] CompiledFilterHandle filter)
 {
-    (void)filter;
 }
 
 template<meta::OpenGL33ContextForward GL>
 inline CompiledShaderHandle
-RendererOpenGL33<GL>::Impl::CompileShader(const String &name, const Dictionary &parameters)
+RendererOpenGL33<GL>::Impl::CompileShader(
+        [[maybe_unused]] const String &name,
+        [[maybe_unused]] const Dictionary &parameters)
 {
-    (void)name;
-    (void)parameters;
     Log::Message(Log::LT_WARNING, "RendererOpenGL33 MVP: CompileShader is not implemented.");
     return {};
 }
 
 template<meta::OpenGL33ContextForward GL>
 inline void
-RendererOpenGL33<GL>::Impl::RenderShader(CompiledShaderHandle shader, CompiledGeometryHandle geometry, Vector2f translation, TextureHandle texture)
+RendererOpenGL33<GL>::Impl::RenderShader(
+        [[maybe_unused]] CompiledShaderHandle shader,
+        [[maybe_unused]] CompiledGeometryHandle geometry,
+        [[maybe_unused]] Vector2f translation,
+        [[maybe_unused]] TextureHandle texture)
 {
-    (void)shader;
-    (void)geometry;
-    (void)translation;
-    (void)texture;
     Log::Message(Log::LT_WARNING, "RendererOpenGL33 MVP: RenderShader is not implemented.");
 }
 
 template<meta::OpenGL33ContextForward GL>
 inline void
-RendererOpenGL33<GL>::Impl::ReleaseShader(CompiledShaderHandle shader)
+RendererOpenGL33<GL>::Impl::ReleaseShader([[maybe_unused]] CompiledShaderHandle shader)
 {
-    (void)shader;
 }
 
 template<meta::OpenGL33ContextForward GL>
@@ -599,12 +578,12 @@ RendererOpenGL33<GL>::Impl::InitializePrograms(void)
 {
     auto &gl = *get_gl_();
 
-    if (!CreateProgram(gl, color_program_, VertexShaderMain<GL>(), FragmentShaderColor<GL>(), false))
+    if (!CreateProgram(gl, color_program_, kVertexShaderMain, kFragmentShaderColor, false))
     {
         return false;
     }
 
-    if (!CreateProgram(gl, texture_program_, VertexShaderMain<GL>(), FragmentShaderTexture<GL>(), true))
+    if (!CreateProgram(gl, texture_program_, kVertexShaderMain, kFragmentShaderTexture, true))
     {
         return false;
     }
@@ -804,14 +783,53 @@ RendererOpenGL33<GL>::Impl::UpdateViewportState(void)
     std::array<int, 4> viewport = {0, 0, 1, 1};
     gl.GetIntegerv(kGlViewport<GL>, viewport.data());
 
+    const int new_width  = Math::Max(viewport[2], 1);
+    const int new_height = Math::Max(viewport[3], 1);
+
+    // Only recalculate projection when viewport actually changed.
+    if (viewport[0] == viewport_x_ && viewport[1] == viewport_y_ &&
+        new_width == viewport_width_ && new_height == viewport_height_)
+    {
+        return;
+    }
+
     viewport_x_      = viewport[0];
     viewport_y_      = viewport[1];
-    viewport_width_  = Math::Max(viewport[2], 1);
-    viewport_height_ = Math::Max(viewport[3], 1);
+    viewport_width_  = new_width;
+    viewport_height_ = new_height;
 
     projection_ = Matrix4f::ProjectOrtho(0.f, static_cast<float>(viewport_width_), static_cast<float>(viewport_height_), 0.f, -10000.f, 10000.f);
     transform_  = projection_ * (has_local_transform_ ? local_transform_ : Matrix4f::Identity());
     program_transform_dirty_.set();
+}
+
+template<meta::OpenGL33ContextForward GL>
+inline void
+RendererOpenGL33<GL>::Impl::SetScissor(Rectanglei region)
+{
+    auto &gl = *get_gl_();
+
+    // Toggle GL_SCISSOR_TEST only when validity changes.
+    if (region.Valid() != scissor_state_.Valid())
+    {
+        if (region.Valid())
+            gl.Enable(kGlScissorTest<GL>);
+        else
+            gl.Disable(kGlScissorTest<GL>);
+    }
+
+    if (region.Valid() && region != scissor_state_)
+    {
+        // Clamp to viewport to avoid driver issues (WebGL in particular).
+        const int x = Math::Clamp(region.Left(), 0, viewport_width_);
+        const int y = Math::Clamp(viewport_height_ - region.Bottom(), 0, viewport_height_);
+        const int w = Math::Clamp(region.Width(), 0, viewport_width_);
+        const int h = Math::Clamp(region.Height(), 0, viewport_height_);
+
+        gl.Scissor(x, y, w, h);
+    }
+
+    scissor_state_ = region;
 }
 
 template<meta::OpenGL33ContextForward GL>
@@ -840,16 +858,6 @@ inline typename RendererOpenGL33<GL>::Impl::GLuint_t
 RendererOpenGL33<GL>::Impl::ToTextureId(TextureHandle texture)
 {
     return static_cast<GLuint_t>(texture);
-}
-
-template<meta::OpenGL33ContextForward GL>
-inline Rectanglei
-RendererOpenGL33<GL>::Impl::VerticallyFlipped(Rectanglei rect, int viewport_height)
-{
-    Rectanglei flipped = rect;
-    flipped.p0.y       = viewport_height - rect.p1.y;
-    flipped.p1.y       = viewport_height - rect.p0.y;
-    return flipped;
 }
 
 } // namespace Rml
