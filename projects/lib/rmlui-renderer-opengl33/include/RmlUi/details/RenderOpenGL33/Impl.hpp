@@ -1,11 +1,38 @@
 #pragma once
 
+#include <bitset>
+
 namespace Rml
 {
 
 template<meta::OpenGL33ContextForward GL>
 struct RendererOpenGL33<GL>::Impl
 {
+    using GLuint_t = unsigned int;
+
+    enum class ProgramId
+    {
+        None,
+        Color,
+        Texture,
+    };
+
+    struct ProgramData
+    {
+        GLuint_t id = 0;
+        int      uniform_transform = -1;
+        int      uniform_translate = -1;
+        int      uniform_tex       = -1;
+    };
+
+    struct CompiledGeometryData
+    {
+        GLuint_t vao        = 0;
+        GLuint_t vbo        = 0;
+        GLuint_t ibo        = 0;
+        int      draw_count = 0;
+    };
+
     ~Impl(void);
 
     Impl(Gl_Context_Provider get_gl);
@@ -72,6 +99,48 @@ struct RendererOpenGL33<GL>::Impl
 
     void
     ReleaseShader(CompiledShaderHandle shader);
+
+  private:
+
+    bool InitializePrograms(void);
+    void DestroyPrograms(void);
+
+    bool CreateShader(GL &gl, GLuint_t &out_shader_id, unsigned int shader_type, const char *source);
+    bool CreateProgram(GL &gl, ProgramData &out_program, const char *vertex_source, const char *fragment_source, bool textured);
+
+    void UseProgram(ProgramId program_id);
+    void SubmitTransformUniform(Vector2f translation);
+    void UpdateViewportState(void);
+
+    static CompiledGeometryData *ToGeometry(CompiledGeometryHandle geometry);
+    static CompiledGeometryHandle ToHandle(CompiledGeometryData *geometry);
+
+    static TextureHandle ToTextureHandle(GLuint_t texture_id);
+    static GLuint_t      ToTextureId(TextureHandle texture);
+
+    static Rectanglei VerticallyFlipped(Rectanglei rect, int viewport_height);
+
+    static constexpr size_t kMaxPrograms = 8;
+
+    ProgramData color_program_   = {};
+    ProgramData texture_program_ = {};
+
+    ProgramId active_program_ = ProgramId::None;
+
+    std::bitset<kMaxPrograms> program_transform_dirty_ = {};
+
+    Matrix4f transform_           = Matrix4f::Identity();
+    Matrix4f projection_          = Matrix4f::Identity();
+    Matrix4f local_transform_     = Matrix4f::Identity();
+    bool     has_local_transform_ = false;
+
+    Rectanglei scissor_state_ = Rectanglei::MakeInvalid();
+    bool       scissor_enabled_ = false;
+
+    int viewport_x_      = 0;
+    int viewport_y_      = 0;
+    int viewport_width_  = 1;
+    int viewport_height_ = 1;
 
   protected:
 

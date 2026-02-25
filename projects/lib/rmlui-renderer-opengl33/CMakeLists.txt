@@ -8,7 +8,6 @@ set(target ${PROJECT_NAME})
 add_library(${target} INTERFACE)
 add_library(RmlUi::renderer::gl33 ALIAS ${target})
 
-target_compile_definitions(${target} INTERFACE RML_RENDERER_OPENGL33_IMPLEMENTATION)
 target_include_directories(${target}
   INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/include)

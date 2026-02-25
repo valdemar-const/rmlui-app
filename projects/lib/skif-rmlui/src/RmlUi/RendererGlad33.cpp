@@ -2,7 +2,7 @@
 #define RML_RENDERER_OPENGL33_IMPLEMENTATION
 #endif
 
-#include <RmlUi/RendererGlad33.hpp>
 #include <glad/gl.h>
+#include <RmlUi/RendererGlad33.hpp>
 
 template class Rml::RendererOpenGL33<GladGLContext>;
