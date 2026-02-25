@@ -6,6 +6,7 @@
         font-family: "IBM Plex Mono";
         font-size: 20dp;
         margin: 16dp;
+        color: #000000;
       }
     </style>
   </head>

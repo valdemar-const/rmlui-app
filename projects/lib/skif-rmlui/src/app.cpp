@@ -70,6 +70,9 @@ App::run(void)
 
     glfwMakeContextCurrent(main);
     gl->ClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    gl->Enable(GL_BLEND);
+    gl->BlendEquation(GL_FUNC_ADD);
+    gl->BlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     // init RmlUi
     render_impl.reset(
