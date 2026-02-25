@@ -223,6 +223,9 @@ RendererOpenGL33<GL>::Impl::RenderGeometry(CompiledGeometryHandle geometry, Vect
         return;
     }
 
+    // Keep projection in sync with dynamic viewport changes (window resize, DPI changes).
+    UpdateViewportState();
+
     auto *compiled_geometry = ToGeometry(geometry);
 
     if (texture)

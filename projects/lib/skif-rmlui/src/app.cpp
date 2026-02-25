@@ -42,6 +42,15 @@ App::run(void)
     Rml::ElementDocument                *document    = nullptr;
     bool                                 gl_loaded   = false;
     bool                                 font_loaded = false;
+    int                                  framebuffer_width  = width;
+    int                                  framebuffer_height = height;
+
+    struct Window_State
+    {
+        GladGLContext *gl      = nullptr;
+        Rml::Context  *context = nullptr;
+    };
+    Window_State window_state = {};
 
     if (!glfwInit())
     {
@@ -74,6 +83,9 @@ App::run(void)
     gl->BlendEquation(GL_FUNC_ADD);
     gl->BlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
+    glfwGetFramebufferSize(main, &framebuffer_width, &framebuffer_height);
+    gl->Viewport(0, 0, framebuffer_width, framebuffer_height);
+
     // init RmlUi
     render_impl.reset(
             new Rml::RendererGlad33(
@@ -90,7 +102,7 @@ App::run(void)
     Rml::Initialise();
 
     // create main RmlUi Context
-    context = Rml::CreateContext("default", Rml::Vector2i(width, height));
+    context = Rml::CreateContext("default", Rml::Vector2i(framebuffer_width, framebuffer_height));
     if (!context)
     {
         Rml::Log::Message(Rml::Log::LT_ERROR, "Failed to create RmlUi context.");
@@ -115,6 +127,42 @@ App::run(void)
     {
         document->Show();
     }
+
+    window_state.gl      = gl.get();
+    window_state.context = context;
+    glfwSetWindowUserPointer(main, &window_state);
+
+    glfwSetFramebufferSizeCallback(
+            main,
+            [](GLFWwindow *window, int new_width, int new_height)
+            {
+                auto *state = static_cast<Window_State *>(glfwGetWindowUserPointer(window));
+                if (!state || !state->gl || !state->context)
+                {
+                    return;
+                }
+
+                state->gl->Viewport(0, 0, new_width, new_height);
+                state->context->SetDimensions({new_width, new_height});
+            }
+    );
+
+    glfwSetWindowRefreshCallback(
+            main,
+            [](GLFWwindow *window)
+            {
+                auto *state = static_cast<Window_State *>(glfwGetWindowUserPointer(window));
+                if (!state || !state->gl || !state->context)
+                {
+                    return;
+                }
+
+                state->gl->Clear(GL_COLOR_BUFFER_BIT);
+                state->context->Update();
+                state->context->Render();
+                glfwSwapBuffers(window);
+            }
+    );
 
     // prepare to main loop
     glfwShowWindow(main);

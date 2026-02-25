@@ -177,7 +177,7 @@
 - [x] Этап E завершён
 - [x] Этап F завершён
 - [x] Сборка `out/Debug` успешна
-- [ ] Визуальная проверка `rmlui-app` пройдена
+- [x] Визуальная проверка `rmlui-app` пройдена
 
 ## 8. Реальный статус после текущей сессии
 
@@ -197,4 +197,51 @@
 
 Проверка:
 - `cmake --build out/Debug` — успешно.
-- Визуальный smoke-test приложения ещё не выполнен в этой сессии.
+- Визуальный smoke-test приложения выполнен: базовый текст отображается корректно.
+
+## 9. Devlog (summary изменений после MVP)
+
+### 9.1. Быстрые UX-фиксы для демо
+
+- Исправлен невалидный документ [`basic.rml`](projects/bin/rmlui-app/assets/ui/basic.rml):
+  - добавлен минимальный каркас `<rml>/<head>/<body>`;
+  - добавлен текстовый блок с `Hello`.
+- Добавлен минимальный стиль в [`basic.rml`](projects/bin/rmlui-app/assets/ui/basic.rml):
+  - `font-family: "IBM Plex Mono";`
+  - `color: #000000;`
+  - базовые `font-size` и `margin`.
+
+### 9.2. Диагностика и устойчивость инициализации
+
+- В [`app.cpp`](projects/lib/skif-rmlui/src/app.cpp) добавлены проверки и логи ошибок для:
+  - создания [`Rml::Context`](projects/lib/skif-rmlui/src/app.cpp:105),
+  - загрузки шрифта [`Rml::LoadFontFace`](projects/lib/skif-rmlui/src/app.cpp:113),
+  - загрузки документа [`context->LoadDocument`](projects/lib/skif-rmlui/src/app.cpp:120).
+
+### 9.3. Исправление рендеринга текста (черные прямоугольники вокруг глифов)
+
+- Причина: отключённый alpha blending при отрисовке глиф-атласа.
+- Фикс в [`app.cpp`](projects/lib/skif-rmlui/src/app.cpp):
+  - [`gl->Enable(GL_BLEND)`](projects/lib/skif-rmlui/src/app.cpp:73),
+  - [`gl->BlendEquation(GL_FUNC_ADD)`](projects/lib/skif-rmlui/src/app.cpp:74),
+  - [`gl->BlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)`](projects/lib/skif-rmlui/src/app.cpp:75).
+
+### 9.4. Адаптивный resize через GLFW callbacks
+
+- Добавлен callback [`glfwSetFramebufferSizeCallback`](projects/lib/skif-rmlui/src/app.cpp:132):
+  - обновляет [`glViewport`](projects/lib/skif-rmlui/src/app.cpp:146),
+  - синхронизирует размеры [`Rml::Context::SetDimensions`](projects/lib/skif-rmlui/src/app.cpp:147).
+- Добавлен callback [`glfwSetWindowRefreshCallback`](projects/lib/skif-rmlui/src/app.cpp:151) для мгновенной перерисовки при refresh событиях окна.
+
+### 9.5. Исправление искажения пропорций при resize
+
+- Причина: внутри рендера проекция не всегда успевала синхронизироваться с новым viewport.
+- Фикс в [`RendererOpenGL33::Impl::RenderGeometry`](projects/lib/rmlui-renderer-opengl33/include/RmlUi/details/RenderOpenGL33/Impl.inl:215):
+  - добавлен вызов [`UpdateViewportState()`](projects/lib/rmlui-renderer-opengl33/include/RmlUi/details/RenderOpenGL33/Impl.inl:223) перед draw.
+- Итог: после resize контент сохраняет корректные пропорции без сплющивания.
+
+### 9.6. Статус преемственности
+
+- MVP-функционал до `SetScissorRegion` стабилен.
+- Рендер текста и resize-поведение визуально подтверждены.
+- Следующий логический этап: `EnableClipMask` и слойный/постпроцесс pipeline.
