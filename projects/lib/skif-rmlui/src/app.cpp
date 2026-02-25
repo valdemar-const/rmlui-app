@@ -13,6 +13,7 @@
 #include <RmlUi/Core/DataModelHandle.h>
 
 #include <RmlUi/Core/Context.h>
+#include <RmlUi/Core/Log.h>
 
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
@@ -41,6 +42,15 @@ App::run(void)
     Rml::ElementDocument                *document    = nullptr;
     bool                                 gl_loaded   = false;
     bool                                 font_loaded = false;
+    int                                  framebuffer_width  = width;
+    int                                  framebuffer_height = height;
+
+    struct Window_State
+    {
+        GladGLContext *gl      = nullptr;
+        Rml::Context  *context = nullptr;
+    };
+    Window_State window_state = {};
 
     if (!glfwInit())
     {
@@ -69,6 +79,12 @@ App::run(void)
 
     glfwMakeContextCurrent(main);
     gl->ClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    gl->Enable(GL_BLEND);
+    gl->BlendEquation(GL_FUNC_ADD);
+    gl->BlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    glfwGetFramebufferSize(main, &framebuffer_width, &framebuffer_height);
+    gl->Viewport(0, 0, framebuffer_width, framebuffer_height);
 
     // init RmlUi
     render_impl.reset(
@@ -86,17 +102,67 @@ App::run(void)
     Rml::Initialise();
 
     // create main RmlUi Context
-    context = Rml::CreateContext("default", Rml::Vector2i(width, height));
+    context = Rml::CreateContext("default", Rml::Vector2i(framebuffer_width, framebuffer_height));
+    if (!context)
+    {
+        Rml::Log::Message(Rml::Log::LT_ERROR, "Failed to create RmlUi context.");
+        goto fail_init_rmlui;
+    }
 
     // RmlUi load fonts
     font_loaded = Rml::LoadFontFace("assets/fonts/IBM_Plex_Mono/IBMPlexMono-Regular.ttf");
+    if (!font_loaded)
+    {
+        Rml::Log::Message(Rml::Log::LT_WARNING, "Failed to load font face, fallback fonts may be used.");
+    }
 
     // RmlUi Load Document
     document = context->LoadDocument("assets/ui/basic.rml");
+    if (!document)
+    {
+        Rml::Log::Message(Rml::Log::LT_ERROR, "Failed to load document: assets/ui/basic.rml");
+        goto fail_load_document;
+    }
     if (document)
     {
         document->Show();
     }
+
+    window_state.gl      = gl.get();
+    window_state.context = context;
+    glfwSetWindowUserPointer(main, &window_state);
+
+    glfwSetFramebufferSizeCallback(
+            main,
+            [](GLFWwindow *window, int new_width, int new_height)
+            {
+                auto *state = static_cast<Window_State *>(glfwGetWindowUserPointer(window));
+                if (!state || !state->gl || !state->context)
+                {
+                    return;
+                }
+
+                state->gl->Viewport(0, 0, new_width, new_height);
+                state->context->SetDimensions({new_width, new_height});
+            }
+    );
+
+    glfwSetWindowRefreshCallback(
+            main,
+            [](GLFWwindow *window)
+            {
+                auto *state = static_cast<Window_State *>(glfwGetWindowUserPointer(window));
+                if (!state || !state->gl || !state->context)
+                {
+                    return;
+                }
+
+                state->gl->Clear(GL_COLOR_BUFFER_BIT);
+                state->context->Update();
+                state->context->Render();
+                glfwSwapBuffers(window);
+            }
+    );
 
     // prepare to main loop
     glfwShowWindow(main);
@@ -116,7 +182,9 @@ App::run(void)
     }
 
     document->Close();
+fail_load_document:
     Rml::RemoveContext(context->GetName());
+fail_init_rmlui:
     Rml::Shutdown();
     glfwDestroyWindow(main);
     glfwTerminate();

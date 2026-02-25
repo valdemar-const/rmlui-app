@@ -1,6 +1,8 @@
 #pragma once
 
 #include <RmlUi/Core/RenderInterface.h>
+#include <functional>
+#include <memory>
 #include <type_traits>
 
 namespace Rml::meta
@@ -9,9 +11,57 @@ template<typename GL>
 concept OpenGL33Context =
         requires(
                 GL    gl,
-                float f
+                float f,
+                int i,
+                unsigned int ui,
+                const char *source,
+                const void *ptr,
+                void *mut_ptr
         ) {
             { gl.ClearColor(f, f, f, f) } -> std::same_as<void>;
+
+            { gl.CreateShader(ui) } -> std::convertible_to<unsigned int>;
+            { gl.ShaderSource(ui, i, &source, nullptr) } -> std::same_as<void>;
+            { gl.CompileShader(ui) } -> std::same_as<void>;
+            { gl.GetShaderiv(ui, ui, &i) } -> std::same_as<void>;
+            { gl.GetShaderInfoLog(ui, i, nullptr, static_cast<char *>(mut_ptr)) } -> std::same_as<void>;
+            { gl.DeleteShader(ui) } -> std::same_as<void>;
+
+            { gl.CreateProgram() } -> std::convertible_to<unsigned int>;
+            { gl.BindAttribLocation(ui, ui, source) } -> std::same_as<void>;
+            { gl.AttachShader(ui, ui) } -> std::same_as<void>;
+            { gl.LinkProgram(ui) } -> std::same_as<void>;
+            { gl.DetachShader(ui, ui) } -> std::same_as<void>;
+            { gl.GetProgramiv(ui, ui, &i) } -> std::same_as<void>;
+            { gl.GetProgramInfoLog(ui, i, nullptr, static_cast<char *>(mut_ptr)) } -> std::same_as<void>;
+            { gl.DeleteProgram(ui) } -> std::same_as<void>;
+            { gl.GetUniformLocation(ui, source) } -> std::convertible_to<int>;
+            { gl.UseProgram(ui) } -> std::same_as<void>;
+            { gl.Uniform1i(i, i) } -> std::same_as<void>;
+            { gl.Uniform2fv(i, i, static_cast<const float *>(ptr)) } -> std::same_as<void>;
+            { gl.UniformMatrix4fv(i, i, static_cast<unsigned char>(0), static_cast<const float *>(ptr)) } -> std::same_as<void>;
+
+            { gl.GenVertexArrays(i, static_cast<unsigned int *>(mut_ptr)) } -> std::same_as<void>;
+            { gl.GenBuffers(i, static_cast<unsigned int *>(mut_ptr)) } -> std::same_as<void>;
+            { gl.BindVertexArray(ui) } -> std::same_as<void>;
+            { gl.BindBuffer(ui, ui) } -> std::same_as<void>;
+            { gl.BufferData(ui, static_cast<std::ptrdiff_t>(0), ptr, ui) } -> std::same_as<void>;
+            { gl.EnableVertexAttribArray(ui) } -> std::same_as<void>;
+            { gl.VertexAttribPointer(ui, i, ui, static_cast<unsigned char>(0), i, ptr) } -> std::same_as<void>;
+            { gl.DrawElements(ui, i, ui, ptr) } -> std::same_as<void>;
+            { gl.DeleteVertexArrays(i, static_cast<const unsigned int *>(ptr)) } -> std::same_as<void>;
+            { gl.DeleteBuffers(i, static_cast<const unsigned int *>(ptr)) } -> std::same_as<void>;
+
+            { gl.GenTextures(i, static_cast<unsigned int *>(mut_ptr)) } -> std::same_as<void>;
+            { gl.BindTexture(ui, ui) } -> std::same_as<void>;
+            { gl.TexImage2D(ui, i, i, i, i, i, ui, ui, ptr) } -> std::same_as<void>;
+            { gl.TexParameteri(ui, ui, i) } -> std::same_as<void>;
+            { gl.DeleteTextures(i, static_cast<const unsigned int *>(ptr)) } -> std::same_as<void>;
+
+            { gl.Enable(ui) } -> std::same_as<void>;
+            { gl.Disable(ui) } -> std::same_as<void>;
+            { gl.Scissor(i, i, i, i) } -> std::same_as<void>;
+            { gl.GetIntegerv(ui, &i) } -> std::same_as<void>;
         };
 
 template<typename GL>
@@ -92,7 +142,7 @@ struct RendererOpenGL33 : public Rml::RenderInterface
     CompileShader(const String &name, const Dictionary &parameters) override;
 
     void
-    RenderShader(CompiledShaderHandle shader, CompiledGeometryHandle geometry, Vector2f translation, TextureHandle texture);
+    RenderShader(CompiledShaderHandle shader, CompiledGeometryHandle geometry, Vector2f translation, TextureHandle texture) override;
 
     void
     ReleaseShader(CompiledShaderHandle shader) override;
