@@ -13,6 +13,7 @@
 #include <RmlUi/Core/DataModelHandle.h>
 
 #include <RmlUi/Core/Context.h>
+#include <RmlUi/Core/Log.h>
 
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
@@ -87,12 +88,26 @@ App::run(void)
 
     // create main RmlUi Context
     context = Rml::CreateContext("default", Rml::Vector2i(width, height));
+    if (!context)
+    {
+        Rml::Log::Message(Rml::Log::LT_ERROR, "Failed to create RmlUi context.");
+        goto fail_init_rmlui;
+    }
 
     // RmlUi load fonts
     font_loaded = Rml::LoadFontFace("assets/fonts/IBM_Plex_Mono/IBMPlexMono-Regular.ttf");
+    if (!font_loaded)
+    {
+        Rml::Log::Message(Rml::Log::LT_WARNING, "Failed to load font face, fallback fonts may be used.");
+    }
 
     // RmlUi Load Document
     document = context->LoadDocument("assets/ui/basic.rml");
+    if (!document)
+    {
+        Rml::Log::Message(Rml::Log::LT_ERROR, "Failed to load document: assets/ui/basic.rml");
+        goto fail_load_document;
+    }
     if (document)
     {
         document->Show();
@@ -116,7 +131,9 @@ App::run(void)
     }
 
     document->Close();
+fail_load_document:
     Rml::RemoveContext(context->GetName());
+fail_init_rmlui:
     Rml::Shutdown();
     glfwDestroyWindow(main);
     glfwTerminate();
