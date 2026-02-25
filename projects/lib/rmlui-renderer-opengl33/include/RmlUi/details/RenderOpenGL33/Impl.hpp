@@ -76,6 +76,8 @@ struct RendererOpenGL33<GL>::Impl
   protected:
 
     Gl_Context_Provider get_gl_;
+
+  protected:
 };
 
 } // namespace Rml

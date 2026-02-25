@@ -53,7 +53,7 @@ App::run(void)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // Core Profile
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);           // Для macOS (если используется)
 
-    main = glfwCreateWindow(width, 480, "RmlUi App", nullptr, nullptr);
+    main = glfwCreateWindow(width, height, "RmlUi App", nullptr, nullptr);
     if (!main)
     {
         goto fail_create_glfw_window;
