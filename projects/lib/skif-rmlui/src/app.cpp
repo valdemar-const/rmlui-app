@@ -184,9 +184,11 @@ App::run(void)
 
     document->Close();
 fail_load_document:
+    Rml::SetRenderInterface(nullptr);
     Rml::RemoveContext(context->GetName());
 fail_init_rmlui:
     Rml::Shutdown();
+    render_impl.reset();
     glfwDestroyWindow(main);
     glfwTerminate();
 

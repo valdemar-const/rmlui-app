@@ -2,11 +2,12 @@ if (USE_CPM AND CPM_DOWNLOAD)
 
 include(CPM)
 
-CPMAddPackage(NAME GLAD
+CPMAddPackage(NAME Glad
   URL https://github.com/Dav1dde/glad/archive/refs/tags/v2.0.8.zip
   VERSION 2.0.8
   DOWNLOAD_ONLY
   SOURCE_SUBDIR cmake
+  OVERRIDE_FIND_PACKAGE YES
   EXCLUDE_FROM_ALL)
 
 if (GLAD_ADDED)
