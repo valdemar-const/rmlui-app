@@ -10,13 +10,13 @@ namespace Rml::meta
 template<typename GL>
 concept OpenGL33Context =
         requires(
-                GL    gl,
-                float f,
-                int i,
+                GL           gl,
+                float        f,
+                int          i,
                 unsigned int ui,
-                const char *source,
-                const void *ptr,
-                void *mut_ptr
+                const char  *source,
+                const void  *ptr,
+                void        *mut_ptr
         ) {
             { gl.ClearColor(f, f, f, f) } -> std::same_as<void>;
 

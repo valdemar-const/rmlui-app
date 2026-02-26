@@ -34,14 +34,14 @@ App::run(void)
     constexpr int width  = 640;
     constexpr int height = 480;
 
-    App::Return_Code                     result      = EXIT_SUCCESS;
-    GLFWwindow                          *main        = nullptr;
-    std::unique_ptr<GladGLContext>       gl          = nullptr;
-    std::unique_ptr<Rml::RendererGlad33> render_impl = nullptr;
-    Rml::Context                        *context     = nullptr;
-    Rml::ElementDocument                *document    = nullptr;
-    bool                                 gl_loaded   = false;
-    bool                                 font_loaded = false;
+    App::Return_Code                     result             = EXIT_SUCCESS;
+    GLFWwindow                          *main               = nullptr;
+    std::unique_ptr<GladGLContext>       gl                 = nullptr;
+    std::unique_ptr<Rml::RendererGlad33> render_impl        = nullptr;
+    Rml::Context                        *context            = nullptr;
+    Rml::ElementDocument                *document           = nullptr;
+    bool                                 gl_loaded          = false;
+    bool                                 font_loaded        = false;
     int                                  framebuffer_width  = width;
     int                                  framebuffer_height = height;
 
@@ -50,6 +50,7 @@ App::run(void)
         GladGLContext *gl      = nullptr;
         Rml::Context  *context = nullptr;
     };
+
     Window_State window_state = {};
 
     if (!glfwInit())
@@ -89,7 +90,7 @@ App::run(void)
     // init RmlUi
     render_impl.reset(
             new Rml::RendererGlad33(
-                    [w = main,gl = gl.get()](void) -> GladGLContext *
+                    [w = main, gl = gl.get()](void) -> GladGLContext *
                     {
                         glfwMakeContextCurrent(w);
                         return gl;

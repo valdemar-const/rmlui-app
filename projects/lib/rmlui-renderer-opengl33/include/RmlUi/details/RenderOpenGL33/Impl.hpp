@@ -19,7 +19,7 @@ struct RendererOpenGL33<GL>::Impl
 
     struct ProgramData
     {
-        GLuint_t id = 0;
+        GLuint_t id                = 0;
         int      uniform_transform = -1;
         int      uniform_translate = -1;
         int      uniform_tex       = -1;
@@ -113,7 +113,7 @@ struct RendererOpenGL33<GL>::Impl
     void UpdateViewportState(void);
     void SetScissor(Rectanglei region);
 
-    static CompiledGeometryData *ToGeometry(CompiledGeometryHandle geometry);
+    static CompiledGeometryData  *ToGeometry(CompiledGeometryHandle geometry);
     static CompiledGeometryHandle ToHandle(CompiledGeometryData *geometry);
 
     static TextureHandle ToTextureHandle(GLuint_t texture_id);
