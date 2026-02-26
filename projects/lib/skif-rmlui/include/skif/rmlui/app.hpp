@@ -3,6 +3,7 @@
 #include <skif/rmlui/config.hpp>
 #include <skif/rmlui/core/i_window_manager.hpp>
 #include <skif/rmlui/core/i_event_loop.hpp>
+#include <skif/rmlui/plugin/i_plugin_manager.hpp>
 
 #include <memory>
 #include <string>
@@ -33,6 +34,9 @@ public:
 
     /// Получить менеджер окон
     [[nodiscard]] IWindowManager& GetWindowManager() noexcept;
+
+    /// Получить менеджер плагинов
+    [[nodiscard]] IPluginManager& GetPluginManager() noexcept;
 
     /// Получить конфигурацию
     [[nodiscard]] const WindowConfig& GetConfig() const noexcept;

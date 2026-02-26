@@ -29,4 +29,5 @@ target_sources(${target}
     src/RmlUi/RendererGlad33.cpp
     src/implementation/window_impl.cpp
     src/implementation/window_manager_impl.cpp
-    src/implementation/event_loop_impl.cpp)
+    src/implementation/event_loop_impl.cpp
+    src/implementation/plugin_manager_impl.cpp)

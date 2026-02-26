@@ -4,6 +4,7 @@
 
 #include <implementation/window_manager_impl.hpp>
 #include <implementation/event_loop_impl.hpp>
+#include <implementation/plugin_manager_impl.hpp>
 
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Factory.h>
@@ -31,6 +32,7 @@ struct App::Impl
     std::vector<std::string>     resource_directories;
     std::unique_ptr<IWindowManager> window_manager;
     std::unique_ptr<IEventLoop>     event_loop;
+    std::unique_ptr<IPluginManager> plugin_manager;
 
     // RmlUi state
     std::unique_ptr<GladGLContext>  gl;
@@ -44,6 +46,7 @@ App::App(int argc, char* argv[])
     // Инициализация по умолчанию
     pimpl_->window_manager = std::make_unique<WindowManagerImpl>();
     pimpl_->event_loop     = std::make_unique<EventLoopImpl>();
+    pimpl_->plugin_manager = std::make_unique<PluginManagerImpl>();
 }
 
 App::~App() = default;
@@ -52,6 +55,12 @@ IWindowManager&
 App::GetWindowManager() noexcept
 {
     return *pimpl_->window_manager;
+}
+
+IPluginManager&
+App::GetPluginManager() noexcept
+{
+    return *pimpl_->plugin_manager;
 }
 
 const WindowConfig&
@@ -87,10 +96,18 @@ App::run()
         return EXIT_FAILURE;
     }
 
+    // Инициализация plugin manager
+    if (!pimpl_->plugin_manager->Initialize())
+    {
+        pimpl_->window_manager->Shutdown();
+        return EXIT_FAILURE;
+    }
+
     // Создание главного окна
     auto window = pimpl_->window_manager->CreateWindow(pimpl_->config);
     if (!window)
     {
+        pimpl_->plugin_manager->Shutdown();
         pimpl_->window_manager->Shutdown();
         return EXIT_FAILURE;
     }
@@ -172,6 +189,9 @@ App::run()
         document->Show();
     }
 
+    // Запуск плагинов
+    pimpl_->plugin_manager->StartPlugins();
+
     // Настройка event loop
     pimpl_->event_loop->SetShouldCloseCheck(
         [window = window.get()]() { return window->ShouldClose(); }
@@ -226,6 +246,7 @@ App::run()
     pimpl_->event_loop->Run();
 
     // Очистка
+    pimpl_->plugin_manager->Shutdown();
     pimpl_->window_manager->DestroyWindow(window);
     pimpl_->window_manager->Shutdown();
 
