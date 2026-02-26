@@ -5,6 +5,8 @@
 #include <implementation/window_manager_impl.hpp>
 #include <implementation/event_loop_impl.hpp>
 #include <implementation/plugin_manager_impl.hpp>
+#include <implementation/view_registry_impl.hpp>
+#include <implementation/view_host_impl.hpp>
 
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Factory.h>
@@ -29,10 +31,12 @@ namespace skif::rmlui
 struct App::Impl
 {
     WindowConfig                 config;
-    std::vector<std::string>     resource_directories;
+    std::vector<std::string>    resource_directories;
     std::unique_ptr<IWindowManager> window_manager;
     std::unique_ptr<IEventLoop>     event_loop;
     std::unique_ptr<IPluginManager> plugin_manager;
+    std::unique_ptr<IViewRegistry>  view_registry;
+    std::unique_ptr<IViewHost>      view_host;
 
     // RmlUi state
     std::unique_ptr<GladGLContext>  gl;
@@ -47,6 +51,12 @@ App::App(int argc, char* argv[])
     pimpl_->window_manager = std::make_unique<WindowManagerImpl>();
     pimpl_->event_loop     = std::make_unique<EventLoopImpl>();
     pimpl_->plugin_manager = std::make_unique<PluginManagerImpl>();
+    pimpl_->view_registry  = std::make_unique<ViewRegistryImpl>();
+    
+    // Подключаем ViewRegistry к PluginManager
+    pimpl_->plugin_manager->SetViewRegistry(pimpl_->view_registry.get());
+    
+    // ViewHost создаётся после инициализации RmlUi контекста
 }
 
 App::~App() = default;
@@ -61,6 +71,18 @@ IPluginManager&
 App::GetPluginManager() noexcept
 {
     return *pimpl_->plugin_manager;
+}
+
+IViewRegistry&
+App::GetViewRegistry() noexcept
+{
+    return *pimpl_->view_registry;
+}
+
+IViewHost&
+App::GetViewHost() noexcept
+{
+    return *pimpl_->view_host;
 }
 
 const WindowConfig&
@@ -158,6 +180,10 @@ App::run()
         pimpl_->window_manager->Shutdown();
         return EXIT_FAILURE;
     }
+
+    // Создание ViewHost и привязка к контексту
+    pimpl_->view_host = std::make_unique<ViewHostImpl>(*pimpl_->view_registry);
+    pimpl_->view_host->SetContext(pimpl_->context);
 
     // Загрузка шрифтов - сначала из директорий ресурсов, затем по умолчанию
     bool font_loaded = false;

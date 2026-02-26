@@ -8,6 +8,12 @@
 #include <unordered_map>
 #include <vector>
 
+// Forward declaration
+namespace skif::rmlui
+{
+class IViewRegistry;
+} // namespace skif::rmlui
+
 namespace skif::rmlui
 {
 
@@ -21,6 +27,9 @@ public:
     PluginManagerImpl() = default;
     ~PluginManagerImpl() override;
 
+    /// Установить реестр представлений
+    void SetViewRegistry(IViewRegistry* registry);
+
     // IPluginManager
     [[nodiscard]] bool Initialize() noexcept override;
     void Shutdown() noexcept override;
@@ -33,6 +42,7 @@ public:
     void RegisterPlugin(std::unique_ptr<IPlugin> plugin) override;
     [[nodiscard]] IPlugin* GetPlugin(std::string_view name) const override;
     [[nodiscard]] std::vector<IPlugin*> GetPlugins() const override;
+    [[nodiscard]] IViewRegistry& GetViewRegistry() override;
 
 private:
     struct PluginEntry
@@ -42,6 +52,7 @@ private:
     };
 
     std::unordered_map<std::string, PluginEntry> plugins_;
+    IViewRegistry* view_registry_ = nullptr;
     bool initialized_ = false;
 };
 

@@ -1,6 +1,7 @@
 #include <implementation/plugin_manager_impl.hpp>
 
 #include <cassert>
+#include <stdexcept>
 
 namespace skif::rmlui
 {
@@ -8,6 +9,12 @@ namespace skif::rmlui
 PluginManagerImpl::~PluginManagerImpl()
 {
     Shutdown();
+}
+
+void
+PluginManagerImpl::SetViewRegistry(IViewRegistry* registry)
+{
+    view_registry_ = registry;
 }
 
 bool
@@ -118,6 +125,16 @@ PluginManagerImpl::GetPlugins() const
     }
 
     return result;
+}
+
+IViewRegistry&
+PluginManagerImpl::GetViewRegistry()
+{
+    if (!view_registry_)
+    {
+        throw std::runtime_error("ViewRegistry not set in PluginManager");
+    }
+    return *view_registry_;
 }
 
 } // namespace skif::rmlui

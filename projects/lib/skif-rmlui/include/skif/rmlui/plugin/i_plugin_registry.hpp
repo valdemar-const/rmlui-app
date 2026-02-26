@@ -1,6 +1,7 @@
 #pragma once
 
 #include <skif/rmlui/plugin/i_plugin.hpp>
+#include <skif/rmlui/view/i_view_registry.hpp>
 
 #include <memory>
 #include <string_view>
@@ -26,6 +27,9 @@ public:
 
     /// Получить список всех зарегистрированных плагинов
     [[nodiscard]] virtual std::vector<IPlugin*> GetPlugins() const = 0;
+
+    /// Получить реестр представлений для регистрации view плагинами
+    [[nodiscard]] virtual IViewRegistry& GetViewRegistry() = 0;
 };
 
 } // namespace skif::rmlui

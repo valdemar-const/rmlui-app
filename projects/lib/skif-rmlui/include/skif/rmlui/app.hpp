@@ -4,6 +4,8 @@
 #include <skif/rmlui/core/i_window_manager.hpp>
 #include <skif/rmlui/core/i_event_loop.hpp>
 #include <skif/rmlui/plugin/i_plugin_manager.hpp>
+#include <skif/rmlui/view/i_view_registry.hpp>
+#include <skif/rmlui/view/i_view_host.hpp>
 
 #include <memory>
 #include <string>
@@ -37,6 +39,12 @@ public:
 
     /// Получить менеджер плагинов
     [[nodiscard]] IPluginManager& GetPluginManager() noexcept;
+
+    /// Получить реестр представлений
+    [[nodiscard]] IViewRegistry& GetViewRegistry() noexcept;
+
+    /// Получить хост представлений
+    [[nodiscard]] IViewHost& GetViewHost() noexcept;
 
     /// Получить конфигурацию
     [[nodiscard]] const WindowConfig& GetConfig() const noexcept;
