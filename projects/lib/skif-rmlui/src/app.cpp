@@ -158,6 +158,54 @@ App::run()
     const auto [fb_width, fb_height] = window->GetFramebufferSize();
     pimpl_->gl->Viewport(0, 0, fb_width, fb_height);
 
+    // Структура для передачи состояния в callbacks
+    struct WindowState
+    {
+        GladGLContext* gl      = nullptr;
+        Rml::Context*  context = nullptr;
+    };
+    
+    WindowState window_state;
+    window_state.gl      = pimpl_->gl.get();
+    window_state.context = pimpl_->context; // пока nullptr, будет обновлён после создания контекста
+    
+    // Устанавливаем user pointer для callbacks
+    glfwSetWindowUserPointer(window->GetGlfwWindow(), &window_state);
+
+    // Callback для изменения размера framebuffer
+    glfwSetFramebufferSizeCallback(
+        window->GetGlfwWindow(),
+        [](GLFWwindow* glfw_window, int new_width, int new_height)
+        {
+            auto* state = static_cast<WindowState*>(glfwGetWindowUserPointer(glfw_window));
+            if (!state || !state->gl || !state->context)
+            {
+                return;
+            }
+            
+            state->gl->Viewport(0, 0, new_width, new_height);
+            state->context->SetDimensions({new_width, new_height});
+        }
+    );
+
+    // Callback для обновления окна (при resize или необходимости перерисовки)
+    glfwSetWindowRefreshCallback(
+        window->GetGlfwWindow(),
+        [](GLFWwindow* glfw_window)
+        {
+            auto* state = static_cast<WindowState*>(glfwGetWindowUserPointer(glfw_window));
+            if (!state || !state->gl || !state->context)
+            {
+                return;
+            }
+            
+            state->gl->Clear(GL_COLOR_BUFFER_BIT);
+            state->context->Update();
+            state->context->Render();
+            glfwSwapBuffers(glfw_window);
+        }
+    );
+
     // Инициализация RmlUi
     pimpl_->render_impl = std::make_unique<Rml::RendererGlad33>(
         [w = window.get(), gl = pimpl_->gl.get()](void) -> GladGLContext*
@@ -180,6 +228,9 @@ App::run()
         pimpl_->window_manager->Shutdown();
         return EXIT_FAILURE;
     }
+    
+    // Обновляем context в window_state для callback
+    window_state.context = pimpl_->context;
 
     // Создание ViewHost и привязка к контексту
     pimpl_->view_host = std::make_unique<ViewHostImpl>(*pimpl_->view_registry);
@@ -208,11 +259,32 @@ App::run()
         Rml::Log::Message(Rml::Log::LT_WARNING, "Failed to load font face, fallback fonts may be used.");
     }
 
-    // Загрузка документа
-    Rml::ElementDocument* document = pimpl_->context->LoadDocument("assets/ui/basic.rml");
+    // Загрузка документа - пробуем разные пути
+    const char* rml_paths[] = {
+        "assets/ui/basic.rml",
+        "projects/bin/rmlui-app/assets/ui/basic.rml",
+        "../projects/bin/rmlui-app/assets/ui/basic.rml"
+    };
+    
+    Rml::ElementDocument* document = nullptr;
+    for (const auto* path : rml_paths)
+    {
+        Rml::Log::Message(Rml::Log::LT_INFO, "Trying to load RML: %s", path);
+        document = pimpl_->context->LoadDocument(path);
+        if (document)
+        {
+            Rml::Log::Message(Rml::Log::LT_INFO, "Successfully loaded RML: %s", path);
+            break;
+        }
+    }
+    
     if (document)
     {
         document->Show();
+    }
+    else
+    {
+        Rml::Log::Message(Rml::Log::LT_ERROR, "Failed to load RML document from all paths!");
     }
 
     // Запуск плагинов
@@ -240,6 +312,12 @@ App::run()
     pimpl_->event_loop->OnRender(
         [this, window = window.get()]()
         {
+            // Make context current
+            window->MakeContextCurrent();
+            
+            // Clear the screen
+            pimpl_->gl->Clear(GL_COLOR_BUFFER_BIT);
+            
             // Render RmlUi
             if (pimpl_->context)
             {
