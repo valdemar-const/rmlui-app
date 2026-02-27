@@ -7,6 +7,7 @@
 #include <implementation/plugin_manager_impl.hpp>
 #include <implementation/view_registry_impl.hpp>
 #include <implementation/view_host_impl.hpp>
+#include <implementation/input_manager_impl.hpp>
 
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Factory.h>
@@ -37,6 +38,7 @@ struct App::Impl
     std::unique_ptr<IPluginManager> plugin_manager;
     std::unique_ptr<IViewRegistry>  view_registry;
     std::unique_ptr<IViewHost>      view_host;
+    std::unique_ptr<IInputManager>  input_manager;
 
     // RmlUi state
     std::unique_ptr<GladGLContext>  gl;
@@ -52,6 +54,7 @@ App::App(int argc, char* argv[])
     pimpl_->event_loop     = std::make_unique<EventLoopImpl>();
     pimpl_->plugin_manager = std::make_unique<PluginManagerImpl>();
     pimpl_->view_registry  = std::make_unique<ViewRegistryImpl>();
+    pimpl_->input_manager  = std::make_unique<InputManagerImpl>();
     
     // Подключаем ViewRegistry к PluginManager
     pimpl_->plugin_manager->SetViewRegistry(pimpl_->view_registry.get());
@@ -83,6 +86,12 @@ IViewHost&
 App::GetViewHost() noexcept
 {
     return *pimpl_->view_host;
+}
+
+IInputManager&
+App::GetInputManager() noexcept
+{
+    return *pimpl_->input_manager;
 }
 
 const WindowConfig&
@@ -206,6 +215,9 @@ App::run()
         }
     );
 
+    // Инициализация InputManager
+    pimpl_->input_manager->SetWindow(window->GetGlfwWindow());
+
     // Инициализация RmlUi
     pimpl_->render_impl = std::make_unique<Rml::RendererGlad33>(
         [w = window.get(), gl = pimpl_->gl.get()](void) -> GladGLContext*
@@ -235,6 +247,9 @@ App::run()
     // Создание ViewHost и привязка к контексту
     pimpl_->view_host = std::make_unique<ViewHostImpl>(*pimpl_->view_registry);
     pimpl_->view_host->SetContext(pimpl_->context);
+    
+    // Установка RmlUi контекста в InputManager
+    pimpl_->input_manager->SetContext(pimpl_->context);
 
     // Загрузка шрифтов - сначала из директорий ресурсов, затем по умолчанию
     bool font_loaded = false;
@@ -308,6 +323,9 @@ App::run()
         {
             // Обработка GLFW событий
             pimpl_->window_manager->PollEvents();
+            
+            // Update InputManager
+            pimpl_->input_manager->Update();
             
             // Update RmlUi
             if (pimpl_->context)

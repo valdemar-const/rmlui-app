@@ -6,6 +6,7 @@
 #include <skif/rmlui/plugin/i_plugin_manager.hpp>
 #include <skif/rmlui/view/i_view_registry.hpp>
 #include <skif/rmlui/view/i_view_host.hpp>
+#include <skif/rmlui/input/i_input_manager.hpp>
 
 #include <memory>
 #include <string>
@@ -45,6 +46,9 @@ public:
 
     /// Получить хост представлений
     [[nodiscard]] IViewHost& GetViewHost() noexcept;
+
+    /// Получить менеджер ввода
+    [[nodiscard]] IInputManager& GetInputManager() noexcept;
 
     /// Получить конфигурацию
     [[nodiscard]] const WindowConfig& GetConfig() const noexcept;

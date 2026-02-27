@@ -5,8 +5,87 @@
 ### Известные проблемы
 
 - ~~**Чёрный экран при запуске**: RML документ не загружается. Требуется отладка путей и проверка загрузки шрифтов/документов.~~ **ИСПРАВЛЕНО**
-- **Кнопки не работают**: Требуется реализация Input System (Фаза 5)
+- ~~**Кнопки не работают**: Требуется реализация Input System (Фаза 5)~~ **ИСПРАВЛЕНО**
 - **Панель не на весь экран**: Фиксированный размер в RML
+
+---
+
+### Фаза 5: Input System (Завершена)
+
+**Цель**: Обработка ввода с интеграцией в RmlUi.
+
+**Реализованные компоненты**:
+
+| Компонент | Файл | Описание |
+|-----------|------|----------|
+| KeyCode | `include/skif/rmlui/input/key_codes.hpp` | Перечисление клавиш |
+| MouseButton | `include/skif/rmlui/input/mouse_buttons.hpp` | Перечисление кнопок мыши |
+| IInputManager | `include/skif/rmlui/input/i_input_manager.hpp` | Интерфейс менеджера ввода |
+| InputManagerImpl | `private/implementation/input_manager_impl.hpp` | Реализация |
+
+**Ключевые решения**:
+
+1. **GLFW callbacks** - KeyCallback, MouseButtonCallback, MouseMoveCallback, MouseWheelCallback
+2. **Состояние ввода** - массивы для key_states, mouse_button_states, mouse_position, mouse_delta
+3. **Signal-based events** - OnKeyDown, OnKeyUp, OnMouseDown, OnMouseUp, OnMouseMove
+4. **RmlUi интеграция** - SetContext() для передачи RmlUi контекста
+5. **Инъекция событий** - InjectKeyDown/Up, InjectMouseMove/Down/Up для отправки в RmlUi
+
+**Интерфейс IInputManager**:
+```cpp
+class IInputManager
+{
+public:
+    virtual ~IInputManager() = default;
+    
+    // Keyboard
+    virtual bool IsKeyDown(KeyCode key) const = 0;
+    virtual bool IsKeyPressed(KeyCode key) const = 0;
+    
+    // Mouse
+    virtual Vector2f GetMousePosition() const = 0;
+    virtual Vector2f GetMouseDelta() const = 0;
+    virtual bool IsMouseButtonDown(MouseButton button) const = 0;
+    virtual float GetMouseWheel() const = 0;
+    
+    // RmlUi integration
+    virtual void InjectKeyDown(int key, int modifiers) = 0;
+    virtual void InjectKeyUp(int key, int modifiers) = 0;
+    virtual void InjectMouseMove(int x, int y, int dx, int dy) = 0;
+    virtual void InjectMouseDown(int x, int y, int button, int modifiers) = 0;
+    virtual void InjectMouseUp(int x, int y, int button, int modifiers) = 0;
+    
+    // Setup
+    virtual void SetWindow(GLFWwindow* window) = 0;
+    virtual void SetContext(Rml::Context* context) = 0;
+    virtual void Update() = 0;
+    
+    // Signals
+    Signal<KeyCode> OnKeyDown;
+    Signal<KeyCode> OnKeyUp;
+    Signal<MouseButton> OnMouseDown;
+    Signal<MouseButton> OnMouseUp;
+    Signal<Vector2f> OnMouseMove;
+};
+```
+
+**Интеграция с App**:
+```cpp
+// Инициализация InputManager
+pimpl_->input_manager = std::make_unique<InputManagerImpl>();
+
+// Установка GLFW окна
+pimpl_->input_manager->SetWindow(window->GetGlfwWindow());
+
+// Установка RmlUi контекста (после создания)
+pimpl_->input_manager->SetContext(pimpl_->context);
+```
+
+**Как работает**:
+1. GLFW callbacks регистрируются в SetWindow()
+2. При событии ввода - callback обновляет состояние и вызывает signal
+3. Callback также вызывает Inject методы для отправки в RmlUi
+4. RmlUi::Context::ProcessKeyDown/Up, ProcessMouseMove и т.д. вызываются для обработки UI событий
 
 ---
 
@@ -267,6 +346,10 @@ projects/lib/skif-rmlui/
 │   └── layout/
 │       ├── i_layout_engine.hpp
 │       └── layout_node.hpp
+│   └── input/
+│       ├── i_input_manager.hpp
+│       ├── key_codes.hpp
+│       └── mouse_buttons.hpp
 ├── private/implementation/
 │   ├── window_impl.hpp
 │   ├── window_manager_impl.hpp
@@ -274,7 +357,8 @@ projects/lib/skif-rmlui/
 │   ├── plugin_manager_impl.hpp
 │   ├── view_registry_impl.hpp
 │   ├── view_host_impl.hpp
-│   └── layout_engine_impl.hpp
+│   ├── layout_engine_impl.hpp
+│   └── input_manager_impl.hpp
 └── src/
     ├── app.cpp
     └── implementation/
@@ -284,7 +368,8 @@ projects/lib/skif-rmlui/
         ├── plugin_manager_impl.cpp
         ├── view_registry_impl.cpp
         ├── view_host_impl.cpp
-        └── layout_engine_impl.cpp
+        ├── layout_engine_impl.cpp
+        └── input_manager_impl.cpp
 
 projects/bin/rmlui-app/
 ├── main.cpp                    # Регистрация плагина
@@ -300,7 +385,7 @@ projects/bin/rmlui-app/
 
 ### Следующие шаги
 
-1. **Фаза 5: Input System** - обработка ввода с интеграцией в RmlUi
+1. ~~**Фаза 5: Input System** - обработка ввода с интеграцией в RmlUi~~ **ЗАВЕРШЕНО**
 2. **Фаза 6: Resource System** - управление ресурсами
 
 ---
