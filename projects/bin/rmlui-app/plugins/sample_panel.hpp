@@ -36,6 +36,8 @@ private:
     skif::rmlui::ViewDescriptor descriptor_;
     Rml::ElementDocument* document_ = nullptr;
     int counter_ = 0;
+    
+    void UpdateCounterDisplay();
 };
 
 /**

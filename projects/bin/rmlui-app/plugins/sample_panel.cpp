@@ -5,11 +5,39 @@
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
+#include <RmlUi/Core/EventListener.h>
 
 #include <string>
+#include <memory>
 
 namespace sample
 {
+
+// ============================================================================
+// LambdaEventListener - обёртка для std::function в RmlUi EventListener
+// ============================================================================
+
+class LambdaEventListener : public Rml::EventListener
+{
+public:
+    using Callback = std::function<void(Rml::Event&)>;
+    
+    explicit LambdaEventListener(Callback callback)
+        : callback_(std::move(callback))
+    {
+    }
+    
+    void ProcessEvent(Rml::Event& event) override
+    {
+        if (callback_)
+        {
+            callback_(event);
+        }
+    }
+    
+private:
+    Callback callback_;
+};
 
 // ============================================================================
 // SamplePanelView Implementation
@@ -35,8 +63,46 @@ void
 SamplePanelView::OnCreated(Rml::ElementDocument* document)
 {
     document_ = document;
-    // View создана - RML документ загружен
-    // Здесь можно настроить начальное состояние элементов
+    
+    // Находим элементы
+    auto* increment_btn = document_->GetElementById("increment-button");
+    auto* reset_btn = document_->GetElementById("reset-button");
+    
+    // Привязываем обработчики событий через LambdaEventListener
+    if (increment_btn)
+    {
+        increment_btn->AddEventListener("click",
+            new LambdaEventListener([this](Rml::Event& event)
+            {
+                counter_++;
+                UpdateCounterDisplay();
+            })
+        );
+    }
+    
+    if (reset_btn)
+    {
+        reset_btn->AddEventListener("click",
+            new LambdaEventListener([this](Rml::Event& event)
+            {
+                counter_ = 0;
+                UpdateCounterDisplay();
+            })
+        );
+    }
+}
+
+void
+SamplePanelView::UpdateCounterDisplay()
+{
+    if (document_)
+    {
+        auto* counter_element = document_->GetElementById("counter-value");
+        if (counter_element)
+        {
+            counter_element->SetInnerRML(std::to_string(counter_));
+        }
+    }
 }
 
 void

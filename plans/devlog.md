@@ -121,10 +121,35 @@ int main(int argc, char* argv[])
 - Плагин регистрирует View через `IViewRegistry`
 - `AttachView` + `ShowView` загружают и отображают панель
 - RML стили работают (шрифт "IBM Plex Mono" в кавычках)
+- **Кнопки работают!** - добавлен `LambdaEventListener` для обработки событий
 
-**Известные ограничения**:
-- Кнопки не работают - RmlUi использует свой `EventListener` API
-- Полноценная обработка событий будет в Фазе 5: Input System
+**Как работают кнопки**:
+```cpp
+// В OnCreated() привязываем обработчики событий
+auto* increment_btn = document_->GetElementById("increment-button");
+increment_btn->AddEventListener("click",
+    new LambdaEventListener([this](Rml::Event& event)
+    {
+        counter_++;
+        UpdateCounterDisplay();
+    })
+);
+```
+
+**LambdaEventListener** - обёртка над `std::function` для RmlUi EventListener API:
+```cpp
+class LambdaEventListener : public Rml::EventListener
+{
+public:
+    using Callback = std::function<void(Rml::Event&)>;
+    explicit LambdaEventListener(Callback callback) : callback_(std::move(callback)) {}
+    void ProcessEvent(Rml::Event& event) override {
+        if (callback_) callback_(event);
+    }
+private:
+    Callback callback_;
+};
+```
 
 ---
 
@@ -343,9 +368,9 @@ projects/lib/skif-rmlui/
 │   │   ├── i_view_registry.hpp
 │   │   ├── i_view_host.hpp
 │   │   └── view_descriptor.hpp
-│   └── layout/
-│       ├── i_layout_engine.hpp
-│       └── layout_node.hpp
+│   ├── layout/
+│   │   ├── i_layout_engine.hpp
+│   │   └── layout_node.hpp
 │   └── input/
 │       ├── i_input_manager.hpp
 │       ├── key_codes.hpp
