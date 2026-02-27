@@ -5,6 +5,47 @@
 ### Известные проблемы
 
 - ~~**Чёрный экран при запуске**: RML документ не загружается. Требуется отладка путей и проверка загрузки шрифтов/документов.~~ **ИСПРАВЛЕНО**
+- **Кнопки не работают**: Требуется реализация Input System (Фаза 5)
+- **Панель не на весь экран**: Фиксированный размер в RML
+
+---
+
+### Пример плагина: Sample Panel (Завершён)
+
+Создан пример плагина для демонстрации workflow разработки UI:
+
+| Файл | Описание |
+|------|----------|
+| `projects/bin/rmlui-app/plugins/sample_panel.hpp` | Заголовочный файл плагина |
+| `projects/bin/rmlui-app/plugins/sample_panel.cpp` | Реализация плагина |
+| `projects/bin/rmlui-app/assets/ui/sample_panel.rml` | RML разметка панели |
+
+**Как использовать**:
+
+1. **Создай RML файл** - разметка и стили
+2. **Создай класс View** - наследуй `IView`, реализуй методы
+3. **Создай класс Plugin** - наследуй `IPlugin`, зарегистрируй View
+4. **Зарегистрируй плагин** в `main.cpp`:
+
+```cpp
+#include "plugins/sample_panel.cpp"
+
+int main(int argc, char* argv[])
+{
+    App app {argc, argv};
+    app.GetPluginManager().RegisterPlugin(std::make_unique<sample::SamplePanelPlugin>());
+    return app.run();
+}
+```
+
+**Что реализовано**:
+- Плагин регистрирует View через `IViewRegistry`
+- `AttachView` + `ShowView` загружают и отображают панель
+- RML стили работают (шрифт "IBM Plex Mono" в кавычках)
+
+**Известные ограничения**:
+- Кнопки не работают - RmlUi использует свой `EventListener` API
+- Полноценная обработка событий будет в Фазе 5: Input System
 
 ---
 
@@ -244,6 +285,15 @@ projects/lib/skif-rmlui/
         ├── view_registry_impl.cpp
         ├── view_host_impl.cpp
         └── layout_engine_impl.cpp
+
+projects/bin/rmlui-app/
+├── main.cpp                    # Регистрация плагина
+├── plugins/
+│   ├── sample_panel.hpp        # Заголовочный файл плагина
+│   └── sample_panel.cpp        # Реализация плагина
+└── assets/ui/
+    ├── basic.rml               # Базовая страница (Hello)
+    └── sample_panel.rml        # Панель плагина
 ```
 
 ---

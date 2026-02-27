@@ -5,6 +5,11 @@ add_executable(${target})
 target_sources(${target} PRIVATE main.cpp)
 target_link_libraries(${target} PRIVATE skif::rmlui::app)
 
+# Добавляем include директории для RmlUi (необходимы для плагинов)
+target_include_directories(${target} PRIVATE
+    $<TARGET_PROPERTY:skif::rmlui::app,INCLUDE_DIRECTORIES>
+)
+
 set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Платформонезависимое копирование

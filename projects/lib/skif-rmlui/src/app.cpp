@@ -259,36 +259,44 @@ App::run()
         Rml::Log::Message(Rml::Log::LT_WARNING, "Failed to load font face, fallback fonts may be used.");
     }
 
-    // Загрузка документа - пробуем разные пути
-    const char* rml_paths[] = {
-        "assets/ui/basic.rml",
-        "projects/bin/rmlui-app/assets/ui/basic.rml",
-        "../projects/bin/rmlui-app/assets/ui/basic.rml"
-    };
-    
-    Rml::ElementDocument* document = nullptr;
-    for (const auto* path : rml_paths)
+    // Запуск плагинов (они регистрируют свои view)
+    pimpl_->plugin_manager->StartPlugins();
+
+    // Пробуем присоединить и показать sample_panel через ViewHost
+    // Сначала Attach (создаёт документ), потом Show (показывает его)
+    pimpl_->view_host->AttachView("sample_panel", nullptr);
+    pimpl_->view_host->ShowView("sample_panel");
+
+    // Если view не загружен (нет плагина), пробуем базовый документ
+    if (!pimpl_->view_host->GetActiveView())
     {
-        Rml::Log::Message(Rml::Log::LT_INFO, "Trying to load RML: %s", path);
-        document = pimpl_->context->LoadDocument(path);
+        const char* rml_paths[] = {
+            "assets/ui/basic.rml",
+            "projects/bin/rmlui-app/assets/ui/basic.rml",
+            "../projects/bin/rmlui-app/assets/ui/basic.rml"
+        };
+        
+        Rml::ElementDocument* document = nullptr;
+        for (const auto* path : rml_paths)
+        {
+            Rml::Log::Message(Rml::Log::LT_INFO, "Trying to load RML: %s", path);
+            document = pimpl_->context->LoadDocument(path);
+            if (document)
+            {
+                Rml::Log::Message(Rml::Log::LT_INFO, "Successfully loaded RML: %s", path);
+                break;
+            }
+        }
+        
         if (document)
         {
-            Rml::Log::Message(Rml::Log::LT_INFO, "Successfully loaded RML: %s", path);
-            break;
+            document->Show();
+        }
+        else
+        {
+            Rml::Log::Message(Rml::Log::LT_ERROR, "Failed to load RML document from all paths!");
         }
     }
-    
-    if (document)
-    {
-        document->Show();
-    }
-    else
-    {
-        Rml::Log::Message(Rml::Log::LT_ERROR, "Failed to load RML document from all paths!");
-    }
-
-    // Запуск плагинов
-    pimpl_->plugin_manager->StartPlugins();
 
     // Настройка event loop
     pimpl_->event_loop->SetShouldCloseCheck(
@@ -330,12 +338,15 @@ App::run()
     );
 
     pimpl_->event_loop->OnExit(
-        [this, document]()
+        [this]()
         {
-            if (document)
+            // Закрываем активный view через ViewHost
+            auto* active_view = pimpl_->view_host->GetActiveView();
+            if (active_view)
             {
-                document->Close();
+                // ViewHost управляет закрытием документа
             }
+            
             Rml::SetRenderInterface(nullptr);
             if (pimpl_->context)
             {
