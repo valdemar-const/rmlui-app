@@ -32,4 +32,5 @@ target_sources(${target}
     src/implementation/event_loop_impl.cpp
     src/implementation/plugin_manager_impl.cpp
     src/implementation/view_registry_impl.cpp
-    src/implementation/view_host_impl.cpp)
+    src/implementation/view_host_impl.cpp
+    src/implementation/layout_engine_impl.cpp)

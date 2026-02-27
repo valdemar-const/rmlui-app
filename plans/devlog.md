@@ -1,10 +1,49 @@
 # DevLog: SkifRmlUi Framework
 
-## 2026-02-26
+## 2026-02-27
 
 ### Известные проблемы
 
 - ~~**Чёрный экран при запуске**: RML документ не загружается. Требуется отладка путей и проверка загрузки шрифтов/документов.~~ **ИСПРАВЛЕНО**
+
+---
+
+### Фаза 4: Layout System (Завершена)
+
+**Цель**: Система панелей как в Blender - split, drag-and-drop "горячие углы".
+
+**Реализованные компоненты**:
+
+| Компонент | Файл | Описание |
+|-----------|------|----------|
+| LayoutNode | `include/skif/rmlui/layout/layout_node.hpp` | Узел раскладки |
+| ILayoutEngine | `include/skif/rmlui/layout/i_layout_engine.hpp` | Интерфейс движка |
+| LayoutEngineImpl | `src/implementation/layout_engine_impl.cpp` | Реализация |
+
+**Ключевые решения**:
+1. **SplitDirection** - перечисление для направления разделения (Horizontal/Vertical)
+2. **LayoutNode** - структура с ratio, min_size, вложенными узлами first/second
+3. **Фабричные методы** - CreateSplitter() и CreatePanel() для удобного создания узлов
+
+**Интерфейс ILayoutEngine**:
+```cpp
+class ILayoutEngine
+{
+public:
+    virtual ~ILayoutEngine() = default;
+    
+    virtual void SetRoot(std::unique_ptr<LayoutNode> root) = 0;
+    virtual void SplitPanel(Rml::Element* panel, SplitDirection direction, float ratio = 0.5f) = 0;
+    virtual void MergePanels(Rml::Element* first, Rml::Element* second) = 0;
+    virtual void BeginDrag(Rml::Element* splitter) = 0;
+    virtual void UpdateDrag(Vector2f mouse_pos) = 0;
+    virtual void EndDrag() = 0;
+    virtual std::string GenerateRML() const = 0;
+};
+```
+
+**Ограничения**:
+- Базовая реализация - требуется доработка для полноценной работы с drag-and-drop
 
 ---
 
@@ -179,18 +218,22 @@ projects/lib/skif-rmlui/
 │   │   ├── i_plugin.hpp
 │   │   ├── i_plugin_registry.hpp
 │   │   └── i_plugin_manager.hpp
-│   └── view/
-│       ├── i_view.hpp
-│       ├── i_view_registry.hpp
-│       ├── i_view_host.hpp
-│       └── view_descriptor.hpp
+│   ├── view/
+│   │   ├── i_view.hpp
+│   │   ├── i_view_registry.hpp
+│   │   ├── i_view_host.hpp
+│   │   └── view_descriptor.hpp
+│   └── layout/
+│       ├── i_layout_engine.hpp
+│       └── layout_node.hpp
 ├── private/implementation/
 │   ├── window_impl.hpp
 │   ├── window_manager_impl.hpp
 │   ├── event_loop_impl.hpp
 │   ├── plugin_manager_impl.hpp
 │   ├── view_registry_impl.hpp
-│   └── view_host_impl.hpp
+│   ├── view_host_impl.hpp
+│   └── layout_engine_impl.hpp
 └── src/
     ├── app.cpp
     └── implementation/
@@ -199,16 +242,16 @@ projects/lib/skif-rmlui/
         ├── event_loop_impl.cpp
         ├── plugin_manager_impl.cpp
         ├── view_registry_impl.cpp
-        └── view_host_impl.cpp
+        ├── view_host_impl.cpp
+        └── layout_engine_impl.cpp
 ```
 
 ---
 
 ### Следующие шаги
 
-1. **Фаза 4: Layout System** - система панелей как в Blender
-2. **Фаза 5: Input System** - обработка ввода с интеграцией в RmlUi
-3. **Фаза 6: Resource System** - управление ресурсами
+1. **Фаза 5: Input System** - обработка ввода с интеграцией в RmlUi
+2. **Фаза 6: Resource System** - управление ресурсами
 
 ---
 
