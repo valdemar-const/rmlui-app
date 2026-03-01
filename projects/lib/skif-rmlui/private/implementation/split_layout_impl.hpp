@@ -2,6 +2,7 @@
 
 #include <skif/rmlui/editor/i_split_layout.hpp>
 #include <skif/rmlui/editor/i_editor_host.hpp>
+#include <skif/rmlui/editor/i_editor_registry.hpp>
 
 #include <memory>
 #include <string>
@@ -19,6 +20,7 @@ namespace skif::rmlui
 /**
  * @brief Реализация рекурсивного дерева панелей
  * @note Обходит дерево SplitNode рекурсивно для обновления редакторов.
+ *       Генерирует RML с panel container (header bar, editor switcher, hot corners).
  */
 class SplitLayoutImpl final : public ISplitLayout
 {
@@ -29,11 +31,13 @@ public:
     // ISplitLayout
     void SetContext(Rml::Context* context) override;
     void SetEditorHost(IEditorHost* host) override;
+    void SetEditorRegistry(IEditorRegistry* registry) override;
     void SetRoot(std::unique_ptr<SplitNode> root) override;
     [[nodiscard]] const SplitNode* GetRoot() const noexcept override;
     bool Split(const SplitNode* panel, SplitDirection direction,
                std::string_view new_editor_name, float ratio) override;
     bool Merge(const SplitNode* split_node, bool keep_first) override;
+    bool SwitchEditor(const SplitNode* panel, std::string_view new_editor_name) override;
     void Update(float delta_time) override;
     void Initialize() override;
     void ApplyLayout() override;
@@ -52,12 +56,18 @@ private:
     /// Сгенерировать RML для узла рекурсивно
     void GenerateRMLRecursive(const SplitNode* node, std::string& output, int depth) const;
 
+    /// Сгенерировать RML для panel container (leaf-узел)
+    void GeneratePanelContainerRML(const SplitNode* node, std::string& output, int depth) const;
+
+    /// Сгенерировать editor switcher dropdown
+    void GenerateEditorSwitcherRML(const SplitNode* node, std::string& output, int depth) const;
+
     /// Найти узел в дереве и его родителя
     struct FindResult
     {
         SplitNode* node   = nullptr;
         SplitNode* parent = nullptr;
-        bool is_first     = false;  // true если node == parent->first
+        bool is_first     = false;
     };
     FindResult FindNode(SplitNode* root, const SplitNode* target);
     FindResult FindNodeRecursive(SplitNode* current, SplitNode* parent, bool is_first, const SplitNode* target);
@@ -67,6 +77,7 @@ private:
 
     Rml::Context*                   context_ = nullptr;
     IEditorHost*                    editor_host_ = nullptr;
+    IEditorRegistry*                editor_registry_ = nullptr;
     std::unique_ptr<SplitNode>      root_;
     uint64_t                        instance_counter_ = 0;
 };

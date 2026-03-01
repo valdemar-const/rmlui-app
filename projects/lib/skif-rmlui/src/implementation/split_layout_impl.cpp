@@ -31,9 +31,14 @@ SplitLayoutImpl::SetEditorHost(IEditorHost* host)
 }
 
 void
+SplitLayoutImpl::SetEditorRegistry(IEditorRegistry* registry)
+{
+    editor_registry_ = registry;
+}
+
+void
 SplitLayoutImpl::SetRoot(std::unique_ptr<SplitNode> root)
 {
-    // Уничтожаем старые редакторы
     if (root_ && editor_host_)
     {
         DestroyRecursive(root_.get());
@@ -60,24 +65,20 @@ SplitLayoutImpl::Split(
         return false;
     }
 
-    // Найти узел в дереве
     auto result = FindNode(root_.get(), panel);
     if (!result.node)
     {
         return false;
     }
 
-    // Сохраняем данные текущего leaf
     std::string old_editor_name = result.node->editor_name;
 
-    // Превращаем leaf в split
     result.node->editor_name.clear();
     result.node->direction = direction;
     result.node->ratio = ratio;
     result.node->first = SplitNode::MakeLeaf(old_editor_name);
     result.node->second = SplitNode::MakeLeaf(new_editor_name);
 
-    // Создаём редактор для новой панели
     if (editor_host_)
     {
         std::string new_id = MakeInstanceId(result.node->second.get());
@@ -103,17 +104,14 @@ SplitLayoutImpl::Merge(const SplitNode* split_node, bool keep_first)
         return false;
     }
 
-    // Определяем какой дочерний узел оставить, какой удалить
     SplitNode* keep_node = keep_first ? result.node->first.get() : result.node->second.get();
     SplitNode* remove_node = keep_first ? result.node->second.get() : result.node->first.get();
 
-    // Уничтожаем редакторы удаляемого поддерева
     if (editor_host_)
     {
         DestroyRecursive(remove_node);
     }
 
-    // Копируем данные оставляемого узла в текущий
     if (keep_node->IsLeaf())
     {
         result.node->editor_name = keep_node->editor_name;
@@ -124,12 +122,43 @@ SplitLayoutImpl::Merge(const SplitNode* split_node, bool keep_first)
     {
         result.node->direction = keep_node->direction;
         result.node->ratio = keep_node->ratio;
-        // Перемещаем дочерние узлы
         auto first = std::move(keep_node->first);
         auto second = std::move(keep_node->second);
         result.node->first = std::move(first);
         result.node->second = std::move(second);
         result.node->editor_name.clear();
+    }
+
+    ApplyLayout();
+    return true;
+}
+
+bool
+SplitLayoutImpl::SwitchEditor(const SplitNode* panel, std::string_view new_editor_name)
+{
+    if (!panel || !root_ || !panel->IsLeaf() || !editor_host_)
+    {
+        return false;
+    }
+
+    auto result = FindNode(root_.get(), panel);
+    if (!result.node || !result.node->IsLeaf())
+    {
+        return false;
+    }
+
+    // Уничтожаем текущий редактор
+    std::string old_instance_id = MakeInstanceId(result.node);
+    editor_host_->DestroyEditor(old_instance_id);
+
+    // Обновляем имя редактора в узле
+    result.node->editor_name = new_editor_name;
+
+    // Создаём новый редактор
+    std::string new_instance_id = MakeInstanceId(result.node);
+    if (editor_host_->CreateEditor(new_editor_name, new_instance_id))
+    {
+        editor_host_->ActivateEditor(new_instance_id);
     }
 
     ApplyLayout();
@@ -157,7 +186,6 @@ SplitLayoutImpl::UpdateRecursive(const SplitNode* node, float delta_time)
 
     if (node->IsLeaf())
     {
-        // Leaf — обновляем редактор
         if (!node->editor_name.empty())
         {
             std::string instance_id = MakeInstanceId(node);
@@ -166,7 +194,6 @@ SplitLayoutImpl::UpdateRecursive(const SplitNode* node, float delta_time)
     }
     else
     {
-        // Split — рекурсивно обновляем дочерние
         UpdateRecursive(node->first.get(), delta_time);
         UpdateRecursive(node->second.get(), delta_time);
     }
@@ -273,21 +300,36 @@ SplitLayoutImpl::GenerateRMLRecursive(const SplitNode* node, std::string& output
         const char* dir_attr = (node->direction == SplitDirection::Horizontal)
             ? "horizontal" : "vertical";
 
+        const char* flex_dir = (node->direction == SplitDirection::Horizontal)
+            ? "row" : "column";
+
+        const char* size_prop = (node->direction == SplitDirection::Horizontal)
+            ? "width" : "height";
+
+        int first_pct = static_cast<int>(node->ratio * 100.0f);
+        int second_pct = 100 - first_pct;
+
         output += indent + "<div class=\"split-container\" data-direction=\"" + dir_attr + "\"";
+        output += " style=\"display: flex; flex-direction: " + std::string(flex_dir) + "; width: 100%; height: 100%;\"";
         output += " data-ratio=\"" + std::to_string(node->ratio) + "\">\n";
 
+        // First panel
         if (node->first)
         {
-            output += indent + "    <div class=\"split-panel split-first\">\n";
+            output += indent + "    <div class=\"split-panel split-first\"";
+            output += " style=\"" + std::string(size_prop) + ": " + std::to_string(first_pct) + "%;\">\n";
             GenerateRMLRecursive(node->first.get(), output, depth + 2);
             output += indent + "    </div>\n";
         }
 
-        output += indent + "    <div class=\"split-divider\"></div>\n";
+        // Divider
+        output += indent + "    <div class=\"split-divider\" data-direction=\"" + dir_attr + "\"></div>\n";
 
+        // Second panel
         if (node->second)
         {
-            output += indent + "    <div class=\"split-panel split-second\">\n";
+            output += indent + "    <div class=\"split-panel split-second\"";
+            output += " style=\"" + std::string(size_prop) + ": " + std::to_string(second_pct) + "%;\">\n";
             GenerateRMLRecursive(node->second.get(), output, depth + 2);
             output += indent + "    </div>\n";
         }
@@ -296,18 +338,114 @@ SplitLayoutImpl::GenerateRMLRecursive(const SplitNode* node, std::string& output
     }
     else
     {
-        // Leaf — панель с редактором
-        if (!node->editor_name.empty())
-        {
-            std::string instance_id = MakeInstanceId(node);
-            output += indent + "<div class=\"editor-panel\" data-editor=\"" + node->editor_name + "\"";
-            output += " data-instance=\"" + instance_id + "\"";
-            output += " data-min-size=\"" + std::to_string(node->min_size) + "\">\n";
-            output += indent + "    <!-- Editor: " + node->editor_name + " -->\n";
-            output += indent + "</div>\n";
-        }
+        // Leaf — генерируем panel container
+        GeneratePanelContainerRML(node, output, depth);
     }
 }
+
+void
+SplitLayoutImpl::GeneratePanelContainerRML(const SplitNode* node, std::string& output, int depth) const
+{
+    if (!node || node->editor_name.empty())
+    {
+        return;
+    }
+
+    std::string indent(depth * 4, ' ');
+    std::string instance_id = MakeInstanceId(node);
+
+    // Получаем дескриптор для display_name и menu
+    const EditorDescriptor* descriptor = nullptr;
+    if (editor_registry_)
+    {
+        descriptor = editor_registry_->GetDescriptor(node->editor_name);
+    }
+
+    std::string display_name = descriptor ? descriptor->display_name : node->editor_name;
+
+    // Panel container
+    output += indent + "<div class=\"panel-container\" data-instance=\"" + instance_id + "\"";
+    output += " data-editor=\"" + node->editor_name + "\">\n";
+
+    // Header bar
+    output += indent + "    <div class=\"panel-header\">\n";
+
+    // Editor switcher dropdown
+    GenerateEditorSwitcherRML(node, output, depth + 2);
+
+    // Menu entries from descriptor
+    if (descriptor && !descriptor->menu_entries.empty())
+    {
+        output += indent + "        <div class=\"panel-menu\">\n";
+        for (const auto& entry : descriptor->menu_entries)
+        {
+            output += indent + "            <button class=\"menu-item\" data-action=\"" + entry.action_id + "\">";
+            output += entry.label;
+            if (!entry.shortcut.empty())
+            {
+                output += " (" + entry.shortcut + ")";
+            }
+            output += "</button>\n";
+        }
+        output += indent + "        </div>\n";
+    }
+
+    output += indent + "    </div>\n";
+
+    // Hot corners (top)
+    output += indent + "    <div class=\"hot-corner hot-corner-tl\" data-action=\"split\" data-instance=\"" + instance_id + "\"></div>\n";
+    output += indent + "    <div class=\"hot-corner hot-corner-tr\" data-action=\"split\" data-instance=\"" + instance_id + "\"></div>\n";
+
+    // Content area
+    output += indent + "    <div class=\"panel-content\" data-instance=\"" + instance_id + "\">\n";
+    output += indent + "        <!-- Editor content: " + node->editor_name + " -->\n";
+    output += indent + "    </div>\n";
+
+    // Status bar
+    output += indent + "    <div class=\"panel-statusbar\">\n";
+    output += indent + "        <span class=\"status-text\">Ready</span>\n";
+    output += indent + "    </div>\n";
+
+    // Hot corners (bottom)
+    output += indent + "    <div class=\"hot-corner hot-corner-bl\" data-action=\"merge\" data-instance=\"" + instance_id + "\"></div>\n";
+    output += indent + "    <div class=\"hot-corner hot-corner-br\" data-action=\"merge\" data-instance=\"" + instance_id + "\"></div>\n";
+
+    output += indent + "</div>\n";
+}
+
+void
+SplitLayoutImpl::GenerateEditorSwitcherRML(const SplitNode* node, std::string& output, int depth) const
+{
+    std::string indent(depth * 4, ' ');
+    std::string instance_id = MakeInstanceId(node);
+
+    output += indent + "<select class=\"editor-switcher\" data-instance=\"" + instance_id + "\">\n";
+
+    if (editor_registry_)
+    {
+        auto descriptors = editor_registry_->GetAllDescriptors();
+        for (const auto* desc : descriptors)
+        {
+            output += indent + "    <option value=\"" + desc->name + "\"";
+            if (desc->name == node->editor_name)
+            {
+                output += " selected";
+            }
+            output += ">" + desc->display_name + "</option>\n";
+        }
+    }
+    else
+    {
+        // Fallback — только текущий редактор
+        output += indent + "    <option value=\"" + node->editor_name + "\" selected>" + node->editor_name + "</option>\n";
+    }
+
+    output += indent + "</select>\n";
+}
+
+// ============================================================================
+// Tree navigation
+// ============================================================================
 
 SplitLayoutImpl::FindResult
 SplitLayoutImpl::FindNode(SplitNode* root, const SplitNode* target)
@@ -366,8 +504,6 @@ SplitLayoutImpl::FindNodeRecursive(
 std::string
 SplitLayoutImpl::MakeInstanceId(const SplitNode* node) const
 {
-    // Используем адрес узла как уникальный идентификатор
-    // Это работает пока дерево не перестраивается
     return node->editor_name + "_" + std::to_string(reinterpret_cast<uintptr_t>(node));
 }
 

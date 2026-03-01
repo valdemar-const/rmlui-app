@@ -15,6 +15,7 @@ namespace skif::rmlui
 {
 
 class IEditorHost;
+class IEditorRegistry;
 
 /**
  * @brief Интерфейс рекурсивного дерева панелей (SplitLayout)
@@ -33,6 +34,9 @@ public:
 
     /// Установить EditorHost для создания/управления редакторами
     virtual void SetEditorHost(IEditorHost* host) = 0;
+
+    /// Установить EditorRegistry для генерации editor switcher
+    virtual void SetEditorRegistry(IEditorRegistry* registry) = 0;
 
     /// Установить корневой узел дерева
     virtual void SetRoot(std::unique_ptr<SplitNode> root) = 0;
@@ -56,6 +60,11 @@ public:
     /// @param split_node Split-узел для объединения
     /// @param keep_first true — оставить первый дочерний, false — второй
     virtual bool Merge(const SplitNode* split_node, bool keep_first = true) = 0;
+
+    /// Переключить тип редактора в панели (leaf-узле)
+    /// @param panel Leaf-узел для переключения
+    /// @param new_editor_name Имя нового типа редактора
+    virtual bool SwitchEditor(const SplitNode* panel, std::string_view new_editor_name) = 0;
 
     /// Рекурсивно обновить все активные редакторы в дереве
     virtual void Update(float delta_time) = 0;

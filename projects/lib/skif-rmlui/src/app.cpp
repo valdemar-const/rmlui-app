@@ -346,6 +346,7 @@ App::App(int argc, char* argv[])
     );
     pimpl_->split_layout    = std::make_unique<SplitLayoutImpl>();
     pimpl_->split_layout->SetEditorHost(pimpl_->editor_host.get());
+    pimpl_->split_layout->SetEditorRegistry(pimpl_->editor_registry.get());
 
     // Подключаем registries к PluginManager
     pimpl_->plugin_manager->SetViewRegistry(pimpl_->view_registry.get());

@@ -52,6 +52,12 @@ public:
 
     /// Вызывается при уничтожении — освободить ресурсы
     virtual void OnDispose() noexcept = 0;
+
+    /// Получить текст статус бара (опционально, по умолчанию пустой)
+    [[nodiscard]] virtual std::string_view GetStatusText() const noexcept
+    {
+        return {};
+    }
 };
 
 /**
