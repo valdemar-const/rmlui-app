@@ -37,4 +37,5 @@ target_sources(${target}
     src/implementation/input_manager_impl.cpp
     src/implementation/editor_registry_impl.cpp
     src/implementation/editor_host_impl.cpp
-    src/implementation/split_layout_impl.cpp)
+    src/implementation/split_layout_impl.cpp
+    src/implementation/panel_container_controller.cpp)

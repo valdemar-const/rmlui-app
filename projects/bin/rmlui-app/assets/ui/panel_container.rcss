@@ -1,0 +1,193 @@
+/* ============================================================================
+ * Panel Container Styles — Blender-like editor panel system
+ * ============================================================================ */
+
+/* Split container — horizontal or vertical */
+.split-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.split-container[data-direction=horizontal] {
+    flex-direction: row;
+}
+
+.split-container[data-direction=vertical] {
+    flex-direction: column;
+}
+
+/* Split panels */
+.split-panel {
+    overflow: hidden;
+    position: relative;
+}
+
+/* Split divider — draggable separator between panels */
+.split-divider {
+    background-color: #1a1a1a;
+    z-index: 50;
+    flex-shrink: 0;
+}
+
+.split-divider[data-direction=horizontal] {
+    width: 3dp;
+    cursor: resize;
+}
+
+.split-divider[data-direction=vertical] {
+    height: 3dp;
+    cursor: resize;
+}
+
+.split-divider:hover {
+    background-color: #4a9eff;
+}
+
+.split-divider:active {
+    background-color: #3a8eef;
+}
+
+/* ============================================================================
+ * Panel Container — wraps each editor
+ * ============================================================================ */
+
+.panel-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background-color: #2a2a2a;
+    position: relative;
+}
+
+/* Header bar */
+.panel-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 26dp;
+    min-height: 26dp;
+    background-color: #333333;
+    border-bottom: 1dp #444444;
+    padding: 0 4dp;
+    gap: 4dp;
+    flex-shrink: 0;
+}
+
+/* Editor type switcher */
+.editor-switcher {
+    min-width: 100dp;
+    height: 20dp;
+    background-color: #444444;
+    color: #dddddd;
+    border: 1dp #555555;
+    font-size: 11dp;
+    padding: 0 4dp;
+}
+
+.editor-switcher:hover {
+    background-color: #505050;
+    border-color: #666666;
+}
+
+/* Menu items in header */
+.panel-menu {
+    display: flex;
+    flex-direction: row;
+    gap: 1dp;
+    margin-left: 8dp;
+}
+
+.menu-item {
+    padding: 2dp 8dp;
+    background-color: transparent;
+    color: #aaaaaa;
+    border: 0;
+    font-size: 11dp;
+    height: 20dp;
+}
+
+.menu-item:hover {
+    background-color: #4a9eff;
+    color: #ffffff;
+}
+
+.menu-item:active {
+    background-color: #3a8eef;
+}
+
+/* Content area — editor RML goes here */
+.panel-content {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+}
+
+/* Status bar */
+.panel-statusbar {
+    height: 20dp;
+    min-height: 20dp;
+    background-color: #333333;
+    border-top: 1dp #444444;
+    padding: 0 8dp;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.status-text {
+    font-size: 10dp;
+    color: #888888;
+}
+
+/* ============================================================================
+ * Hot corners — drag zones for split/merge
+ * ============================================================================ */
+
+.hot-corner {
+    position: absolute;
+    width: 10dp;
+    height: 10dp;
+    z-index: 100;
+}
+
+.hot-corner-tl {
+    top: 0;
+    left: 0;
+}
+
+.hot-corner-tr {
+    top: 0;
+    right: 0;
+}
+
+.hot-corner-bl {
+    bottom: 0;
+    left: 0;
+}
+
+.hot-corner-br {
+    bottom: 0;
+    right: 0;
+}
+
+.hot-corner:hover {
+    background-color: rgba(74, 158, 255, 40);
+}
+
+.hot-corner:active {
+    background-color: rgba(74, 158, 255, 80);
+}
+
+/* Triangle indicators in corners */
+.hot-corner-tl:hover {
+    decorator: none;
+    background-color: rgba(74, 158, 255, 60);
+}
+
+.hot-corner-tr:hover {
+    decorator: none;
+    background-color: rgba(74, 158, 255, 60);
+}

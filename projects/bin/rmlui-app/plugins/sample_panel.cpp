@@ -23,6 +23,7 @@ SampleEditor::SampleEditor()
     descriptor_.name = "sample_panel";
     descriptor_.display_name = "Sample Panel";
     descriptor_.rml_path = "assets/ui/sample_panel.rml";
+    descriptor_.rcss_path = "assets/ui/sample_panel.rcss";
     descriptor_.category = "Panels";
     descriptor_.menu_entries = {
         {"Increment", "sample.increment", ""},
@@ -138,6 +139,7 @@ SamplePanelPlugin::OnLoad(skif::rmlui::IPluginRegistry& registry)
     descriptor.name = "sample_panel";
     descriptor.display_name = "Sample Panel";
     descriptor.rml_path = "assets/ui/sample_panel.rml";
+    descriptor.rcss_path = "assets/ui/sample_panel.rcss";
     descriptor.category = "Panels";
     descriptor.menu_entries = {
         {"Increment", "sample.increment", ""},

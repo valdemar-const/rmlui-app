@@ -37,6 +37,7 @@ struct EditorDescriptor
     std::string name;           // Уникальный идентификатор: "3d_viewport", "properties"
     std::string display_name;   // Отображаемое имя: "3D Viewport", "Properties"
     std::string rml_path;       // Путь к RML файлу
+    std::string rcss_path;      // Путь к RCSS файлу стилей (опционально)
     std::string icon;           // Иконка для меню выбора редактора (опционально)
     std::string category;       // Категория: "General", "Animation", "Modeling"
 

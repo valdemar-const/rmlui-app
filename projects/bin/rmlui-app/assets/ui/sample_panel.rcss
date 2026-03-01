@@ -1,0 +1,73 @@
+/* ============================================================================
+ * Sample Panel Editor Styles
+ * ============================================================================ */
+
+.sample-panel-container {
+    display: flex;
+    flex-direction: column;
+    padding: 16dp;
+    gap: 12dp;
+}
+
+.panel-title {
+    font-size: 18dp;
+    font-weight: bold;
+    color: #4a9eff;
+    padding-bottom: 8dp;
+    margin-bottom: 8dp;
+    border-bottom: 1dp #444444;
+}
+
+.counter-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8dp;
+    padding: 12dp;
+    background-color: #333333;
+}
+
+.counter-label {
+    font-size: 12dp;
+    color: #888888;
+}
+
+.counter-value {
+    font-size: 32dp;
+    font-weight: bold;
+    color: #4a9eff;
+}
+
+.button-row {
+    display: flex;
+    gap: 8dp;
+    justify-content: center;
+}
+
+.editor-button {
+    padding: 8dp 16dp;
+    background-color: #4a9eff;
+    color: #ffffff;
+    border-width: 0;
+    cursor: pointer;
+}
+
+.editor-button:hover {
+    background-color: #5aafff;
+}
+
+.editor-button:active {
+    background-color: #3a8eef;
+}
+
+.editor-button-reset {
+    background-color: #ff6b6b;
+}
+
+.editor-button-reset:hover {
+    background-color: #ff8b8b;
+}
+
+.editor-button-reset:active {
+    background-color: #ef5b5b;
+}

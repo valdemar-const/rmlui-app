@@ -12,6 +12,7 @@
 namespace Rml
 {
 class Context;
+class Element;
 class ElementDocument;
 } // namespace Rml
 
@@ -21,6 +22,9 @@ namespace skif::rmlui
 /**
  * @brief Реализация хоста редакторов
  * @note Управляет жизненным циклом экземпляров Editor.
+ *       Поддерживает два режима создания:
+ *       1. Legacy: загрузка RML как отдельного документа
+ *       2. Embedded: вставка Editor RML контента в panel-content элемент layout документа
  */
 class EditorHostImpl final : public IEditorHost
 {
@@ -39,12 +43,35 @@ public:
     void UpdateAll(float delta_time) override;
     void DestroyAll() override;
 
+    /// Создать редактор в embedded режиме — контент вставляется в panel-content элемент
+    /// @param editor_name Имя зарегистрированного типа редактора
+    /// @param instance_id Уникальный идентификатор экземпляра
+    /// @param content_element Элемент panel-content, куда вставить RML контент
+    /// @param layout_document Layout документ (для OnCreated)
+    /// @return true если редактор успешно создан
+    [[nodiscard]] bool CreateEditorEmbedded(
+        std::string_view editor_name,
+        std::string_view instance_id,
+        Rml::Element* content_element,
+        Rml::ElementDocument* layout_document
+    );
+
 private:
+    /// Прочитать файл и вернуть содержимое
+    [[nodiscard]] std::string ReadFile(const std::string& path) const;
+
+    /// Извлечь содержимое <body>...</body> из RML строки
+    [[nodiscard]] std::string ExtractBodyContent(const std::string& rml_content) const;
+
+    /// Извлечь содержимое <style>...</style> из RML строки
+    [[nodiscard]] std::string ExtractStyleContent(const std::string& rml_content) const;
+
     struct EditorInstance
     {
         std::unique_ptr<IEditor>  editor;
         Rml::ElementDocument*     document = nullptr;
         bool                      active   = false;
+        bool                      embedded = false;  // true если создан через CreateEditorEmbedded
     };
 
     IEditorRegistry&                                    registry_;

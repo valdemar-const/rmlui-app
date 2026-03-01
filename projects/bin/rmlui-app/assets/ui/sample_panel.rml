@@ -1,6 +1,7 @@
 <rml>
 <head>
     <title>Sample Panel</title>
+    <link type="text/rcss" href="assets/ui/sample_panel.rcss"/>
     <style>
         body
         {
@@ -9,96 +10,12 @@
             background-color: #2a2a2a;
             color: #ffffff;
             font-family: "IBM Plex Mono";
-            font-size: 14px;
-        }
-        
-        .panel-container
-        {
-            display: flex;
-            flex-direction: column;
-            padding: 16px;
-            gap: 12px;
-        }
-        
-        .panel-title
-        {
-            font-size: 18px;
-            font-weight: bold;
-            color: #4a9eff;
-            padding-bottom: 8px;
-            margin-bottom: 8px;
-            border-bottom-width: 1px;
-        }
-        
-        .counter-section
-        {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            padding: 12px;
-            background-color: #333;
-            border-radius: 4px;
-        }
-        
-        .counter-label
-        {
-            font-size: 12px;
-            color: #888;
-        }
-        
-        .counter-value
-        {
-            font-size: 32px;
-            font-weight: bold;
-            color: #4a9eff;
-        }
-        
-        .button-row
-        {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-        }
-        
-        button
-        {
-            padding: 8px 16px;
-            background-color: #4a9eff;
-            color: #ffffff;
-            border-width: 0;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        
-        button:hover
-        {
-            background-color: #5aafff;
-        }
-        
-        button:active
-        {
-            background-color: #3a8eef;
-        }
-        
-        #reset-button
-        {
-            background-color: #ff6b6b;
-        }
-        
-        #reset-button:hover
-        {
-            background-color: #ff8b8b;
-        }
-        
-        #reset-button:active
-        {
-            background-color: #ef5b5b;
+            font-size: 14dp;
         }
     </style>
 </head>
 <body>
-    <div class="panel-container">
+    <div class="sample-panel-container">
         <div class="panel-title">Sample Panel</div>
         
         <div class="counter-section">
@@ -106,8 +23,8 @@
             <div class="counter-value" id="counter-value">0</div>
             
             <div class="button-row">
-                <button id="increment-button">Increment</button>
-                <button id="reset-button">Reset</button>
+                <button class="editor-button" id="increment-button">Increment</button>
+                <button class="editor-button editor-button-reset" id="reset-button">Reset</button>
             </div>
         </div>
     </div>
