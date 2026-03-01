@@ -43,9 +43,29 @@ void
 SampleEditor::OnCreated(Rml::ElementDocument* document)
 {
     document_ = document;
-    
-    auto* increment_btn = document_->GetElementById("increment-button");
-    auto* reset_btn = document_->GetElementById("reset-button");
+    // Legacy mode — поиск по всему документу
+    BindEventsToContainer(document);
+}
+
+void
+SampleEditor::OnCreatedInContainer(Rml::ElementDocument* document, Rml::Element* content_container)
+{
+    document_ = document;
+    content_container_ = content_container;
+    // Embedded mode — scoped поиск внутри content_container
+    BindEventsToContainer(content_container);
+}
+
+void
+SampleEditor::BindEventsToContainer(Rml::Element* container)
+{
+    if (!container)
+    {
+        return;
+    }
+
+    auto* increment_btn = container->QuerySelector("#increment-button");
+    auto* reset_btn = container->QuerySelector("#reset-button");
     
     if (increment_btn)
     {
@@ -73,9 +93,11 @@ SampleEditor::OnCreated(Rml::ElementDocument* document)
 void
 SampleEditor::UpdateCounterDisplay()
 {
-    if (document_)
+    // Используем scoped поиск если доступен content_container
+    Rml::Element* search_root = content_container_ ? content_container_ : static_cast<Rml::Element*>(document_);
+    if (search_root)
     {
-        auto* counter_element = document_->GetElementById("counter-value");
+        auto* counter_element = search_root->QuerySelector("#counter-value");
         if (counter_element)
         {
             counter_element->SetInnerRML(std::to_string(counter_));

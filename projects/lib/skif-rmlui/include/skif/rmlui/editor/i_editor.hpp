@@ -41,6 +41,15 @@ public:
     /// Вызывается при создании — RML документ загружен и привязан
     virtual void OnCreated(Rml::ElementDocument* document) = 0;
 
+    /// Вызывается при создании в embedded режиме (внутри panel container)
+    /// @param document Layout документ
+    /// @param content_container Элемент panel-content, содержащий RML контент этого Editor'а
+    /// @note По умолчанию вызывает OnCreated(document). Переопределите для scoped поиска элементов.
+    virtual void OnCreatedInContainer(Rml::ElementDocument* document, Rml::Element* content_container)
+    {
+        OnCreated(document);
+    }
+
     /// Вызывается при активации — редактор стал видимым в панели
     virtual void OnActivate() = 0;
 

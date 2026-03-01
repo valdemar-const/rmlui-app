@@ -146,33 +146,14 @@ PanelContainerController::OnHotCornerMouseDown(Rml::Event& event, std::string_vi
 {
     if (action == "split")
     {
-        // Определяем направление по позиции угла
-        // Верхние углы — split
-        Rml::Element* corner = event.GetTargetElement();
-        if (!corner)
-        {
-            return;
-        }
+        // Определяем направление:
+        // По умолчанию — Horizontal (split вправо)
+        // С зажатым Alt — Vertical (split вниз)
+        bool alt_pressed = event.GetParameter<bool>("alt_key", false);
 
-        // Определяем направление по классу угла
-        bool is_left = corner->IsClassSet("hot-corner-tl") || corner->IsClassSet("hot-corner-bl");
-        bool is_top = corner->IsClassSet("hot-corner-tl") || corner->IsClassSet("hot-corner-tr");
-
-        // Горизонтальный split если тянем от левого/правого угла
-        // Вертикальный split если тянем от верхнего/нижнего угла
-        SplitDirection direction = is_left || !is_left
-            ? SplitDirection::Horizontal
-            : SplitDirection::Vertical;
-
-        // Для простоты: TL/TR → horizontal split, BL/BR → vertical split
-        if (is_top)
-        {
-            direction = SplitDirection::Horizontal;
-        }
-        else
-        {
-            direction = SplitDirection::Vertical;
-        }
+        SplitDirection direction = alt_pressed
+            ? SplitDirection::Vertical
+            : SplitDirection::Horizontal;
 
         Rml::Log::Message(Rml::Log::LT_INFO,
             "PanelContainerController: Split requested for instance '%s', direction=%s.",

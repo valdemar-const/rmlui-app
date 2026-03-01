@@ -157,9 +157,9 @@ EditorHostImpl::CreateEditorEmbedded(
     // Вставляем body-контент в panel-content элемент
     content_element->SetInnerRML(body_content);
 
-    // Уведомляем редактор о создании — передаём layout документ
-    // Editor будет использовать layout_document->GetElementById() для поиска элементов
-    editor->OnCreated(layout_document);
+    // Уведомляем редактор о создании — передаём layout документ и content_element
+    // Editor может использовать content_element для scoped поиска элементов
+    editor->OnCreatedInContainer(layout_document, content_element);
 
     // Сохраняем экземпляр
     EditorInstance instance;

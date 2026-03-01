@@ -21,14 +21,18 @@ public:
     [[nodiscard]] const skif::rmlui::EditorDescriptor& GetDescriptor() const noexcept override;
 
     void OnCreated(Rml::ElementDocument* document) override;
+    void OnCreatedInContainer(Rml::ElementDocument* document, Rml::Element* content_container) override;
     void OnActivate() override;
     void OnDeactivate() override;
     void OnUpdate(float delta_time) override;
     void OnDispose() noexcept override;
 
 private:
+    void BindEventsToContainer(Rml::Element* container);
+
     skif::rmlui::EditorDescriptor descriptor_;
     Rml::ElementDocument* document_ = nullptr;
+    Rml::Element* content_container_ = nullptr;
     int counter_ = 0;
     
     void UpdateCounterDisplay();
