@@ -17,6 +17,12 @@ PluginManagerImpl::SetViewRegistry(IViewRegistry* registry)
     view_registry_ = registry;
 }
 
+void
+PluginManagerImpl::SetEditorRegistry(IEditorRegistry* registry)
+{
+    editor_registry_ = registry;
+}
+
 bool
 PluginManagerImpl::Initialize() noexcept
 {
@@ -135,6 +141,16 @@ PluginManagerImpl::GetViewRegistry()
         throw std::runtime_error("ViewRegistry not set in PluginManager");
     }
     return *view_registry_;
+}
+
+IEditorRegistry&
+PluginManagerImpl::GetEditorRegistry()
+{
+    if (!editor_registry_)
+    {
+        throw std::runtime_error("EditorRegistry not set in PluginManager");
+    }
+    return *editor_registry_;
 }
 
 } // namespace skif::rmlui

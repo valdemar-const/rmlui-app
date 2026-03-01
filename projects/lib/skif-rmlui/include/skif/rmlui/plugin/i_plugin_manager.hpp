@@ -7,10 +7,11 @@
 #include <string_view>
 #include <vector>
 
-// Forward declaration
+// Forward declarations
 namespace skif::rmlui
 {
 class IViewRegistry;
+class IEditorRegistry;
 } // namespace skif::rmlui
 
 namespace skif::rmlui
@@ -23,8 +24,11 @@ namespace skif::rmlui
 class IPluginManager : public IPluginRegistry
 {
 public:
-    /// Установить реестр представлений (для регистрации view плагинами)
+    /// Установить реестр представлений (deprecated — используйте SetEditorRegistry)
     virtual void SetViewRegistry(IViewRegistry* registry) = 0;
+
+    /// Установить реестр редакторов
+    virtual void SetEditorRegistry(IEditorRegistry* registry) = 0;
 
     /// Инициализировать менеджер плагинов
     virtual bool Initialize() noexcept = 0;

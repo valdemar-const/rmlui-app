@@ -1,5 +1,6 @@
 #pragma once
 
+#include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/EventListener.h>
 #include <functional>
 

@@ -1,11 +1,12 @@
 #include "sample_panel.hpp"
 
 #include <skif/rmlui/plugin/i_plugin_registry.hpp>
+#include <skif/rmlui/editor/i_editor_registry.hpp>
+#include <skif/rmlui/view/lambda_event_listener.hpp>
 
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
-#include <RmlUi/Core/EventListener.h>
 
 #include <string>
 #include <memory>
@@ -14,91 +15,62 @@ namespace sample
 {
 
 // ============================================================================
-// LambdaEventListener - обёртка для std::function в RmlUi EventListener
+// SampleEditor Implementation
 // ============================================================================
 
-class LambdaEventListener : public Rml::EventListener
-{
-public:
-    using Callback = std::function<void(Rml::Event&)>;
-    
-    explicit LambdaEventListener(Callback callback)
-        : callback_(std::move(callback))
-    {
-    }
-    
-    void ProcessEvent(Rml::Event& event) override
-    {
-        if (callback_)
-        {
-            callback_(event);
-        }
-    }
-    
-    void OnDetach(Rml::Element* /*element*/) override
-    {
-        delete this;
-    }
-    
-private:
-    Callback callback_;
-};
-
-// ============================================================================
-// SamplePanelView Implementation
-// ============================================================================
-
-SamplePanelView::SamplePanelView()
+SampleEditor::SampleEditor()
 {
     descriptor_.name = "sample_panel";
+    descriptor_.display_name = "Sample Panel";
     descriptor_.rml_path = "assets/ui/sample_panel.rml";
     descriptor_.category = "Panels";
-    descriptor_.display_name = "Sample Panel";
+    descriptor_.menu_entries = {
+        {"Increment", "sample.increment", ""},
+        {"Reset", "sample.reset", "Ctrl+R"},
+    };
 }
 
-SamplePanelView::~SamplePanelView() = default;
+SampleEditor::~SampleEditor() = default;
 
-const skif::rmlui::ViewDescriptor&
-SamplePanelView::GetDescriptor() const noexcept
+const skif::rmlui::EditorDescriptor&
+SampleEditor::GetDescriptor() const noexcept
 {
     return descriptor_;
 }
 
 void
-SamplePanelView::OnCreated(Rml::ElementDocument* document)
+SampleEditor::OnCreated(Rml::ElementDocument* document)
 {
     document_ = document;
     
-    // Находим элементы
     auto* increment_btn = document_->GetElementById("increment-button");
     auto* reset_btn = document_->GetElementById("reset-button");
     
-    // Привязываем обработчики событий через LambdaEventListener
     if (increment_btn)
     {
-        increment_btn->AddEventListener("click",
-            new LambdaEventListener([this](Rml::Event& event)
+        skif::rmlui::BindEvent(increment_btn, "click",
+            [this](Rml::Event& /*event*/)
             {
                 counter_++;
                 UpdateCounterDisplay();
-            })
+            }
         );
     }
     
     if (reset_btn)
     {
-        reset_btn->AddEventListener("click",
-            new LambdaEventListener([this](Rml::Event& event)
+        skif::rmlui::BindEvent(reset_btn, "click",
+            [this](Rml::Event& /*event*/)
             {
                 counter_ = 0;
                 UpdateCounterDisplay();
-            })
+            }
         );
     }
 }
 
 void
-SamplePanelView::UpdateCounterDisplay()
+SampleEditor::UpdateCounterDisplay()
 {
     if (document_)
     {
@@ -111,37 +83,34 @@ SamplePanelView::UpdateCounterDisplay()
 }
 
 void
-SamplePanelView::OnDestroyed() noexcept
+SampleEditor::OnActivate()
+{
+    // Редактор стал видимым в панели
+}
+
+void
+SampleEditor::OnDeactivate()
+{
+    // Редактор скрыт
+}
+
+void
+SampleEditor::OnUpdate(float /*delta_time*/)
+{
+    // Обновление каждый кадр
+}
+
+void
+SampleEditor::OnDispose() noexcept
 {
     document_ = nullptr;
-}
-
-void
-SamplePanelView::OnShow()
-{
-    // View стала видимой
-}
-
-void
-SamplePanelView::OnHide()
-{
-    // View скрыта
-}
-
-void
-SamplePanelView::OnUpdate(float /*delta_time*/)
-{
-    // Обновление каждый кадр (если нужно)
 }
 
 // ============================================================================
 // SamplePanelPlugin Implementation
 // ============================================================================
 
-SamplePanelPlugin::SamplePanelPlugin()
-    : view_(std::make_unique<SamplePanelView>())
-{
-}
+SamplePanelPlugin::SamplePanelPlugin() = default;
 
 std::string_view
 SamplePanelPlugin::GetName() const noexcept
@@ -158,23 +127,33 @@ SamplePanelPlugin::GetVersion() const noexcept
 std::string_view
 SamplePanelPlugin::GetDescription() const noexcept
 {
-    return "Sample panel plugin demonstrating the View registration system";
+    return "Sample panel plugin demonstrating the Editor registration system";
 }
 
 void
 SamplePanelPlugin::OnLoad(skif::rmlui::IPluginRegistry& registry)
 {
-    // Регистрируем View в реестре
-    registry.GetViewRegistry().RegisterView(
-        view_->GetDescriptor(),
-        [this]() { return std::make_unique<SamplePanelView>(); }
+    // Регистрируем Editor через contribution point
+    skif::rmlui::EditorDescriptor descriptor;
+    descriptor.name = "sample_panel";
+    descriptor.display_name = "Sample Panel";
+    descriptor.rml_path = "assets/ui/sample_panel.rml";
+    descriptor.category = "Panels";
+    descriptor.menu_entries = {
+        {"Increment", "sample.increment", ""},
+        {"Reset", "sample.reset", "Ctrl+R"},
+    };
+
+    registry.GetEditorRegistry().RegisterEditor(
+        std::move(descriptor),
+        []() { return std::make_unique<SampleEditor>(); }
     );
 }
 
 void
 SamplePanelPlugin::OnUnload() noexcept
 {
-    view_.reset();
+    // Ничего не нужно очищать — EditorHost управляет экземплярами
 }
 
 } // namespace sample
