@@ -26,4 +26,12 @@ target_link_libraries(${target} PRIVATE RmlUi::RmlUi RmlUi::Debugger RmlUi::rend
 target_sources(${target}
   PRIVATE
     src/app.cpp
-    src/RmlUi/RendererGlad33.cpp)
+    src/RmlUi/RendererGlad33.cpp
+    src/implementation/window_impl.cpp
+    src/implementation/window_manager_impl.cpp
+    src/implementation/event_loop_impl.cpp
+    src/implementation/plugin_manager_impl.cpp
+    src/implementation/view_registry_impl.cpp
+    src/implementation/view_host_impl.cpp
+    src/implementation/layout_engine_impl.cpp
+    src/implementation/input_manager_impl.cpp)
