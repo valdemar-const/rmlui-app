@@ -28,7 +28,9 @@ public:
     [[nodiscard]] bool ShouldClose() const noexcept override;
     void MakeContextCurrent() noexcept override;
     void SwapBuffers() noexcept override;
-    [[nodiscard]] GLFWwindow* GetGlfwWindow() const noexcept override;
+    
+    // GLFW-специфичный метод (не в публичном IWindow)
+    [[nodiscard]] GLFWwindow* GetGlfwWindow() const noexcept;
 
 private:
     GLFWwindow* window_ = nullptr;

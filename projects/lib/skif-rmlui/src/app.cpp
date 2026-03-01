@@ -3,6 +3,7 @@
 #include <skif/rmlui/config.hpp>
 
 #include <implementation/window_manager_impl.hpp>
+#include <implementation/window_impl.hpp>
 #include <implementation/event_loop_impl.hpp>
 #include <implementation/plugin_manager_impl.hpp>
 #include <implementation/view_registry_impl.hpp>
@@ -39,7 +40,7 @@ struct App::Impl
     std::unique_ptr<IPluginManager> plugin_manager;
     std::unique_ptr<IViewRegistry>  view_registry;
     std::unique_ptr<IViewHost>      view_host;
-    std::unique_ptr<IInputManager>  input_manager;
+    std::unique_ptr<InputManagerImpl> input_manager;  // Используем конкретный тип для доступа к внутренним методам
 
     // RmlUi state
     std::unique_ptr<GladGLContext>  gl;
@@ -52,6 +53,12 @@ struct App::Impl
     // Конфигурация начального view (для B2)
     std::string initial_view_name;
     std::string fallback_rml_path;
+    
+    // Helper для получения GLFWwindow из IWindow (GLFW-специфичный метод в WindowImpl)
+    static GLFWwindow* GetGlfwWindow(IWindow& window)
+    {
+        return static_cast<WindowImpl&>(window).GetGlfwWindow();
+    }
 };
 
 App::App(int argc, char* argv[])
@@ -138,32 +145,13 @@ App::SetFallbackRml(std::string_view rml_path)
     pimpl_->fallback_rml_path = rml_path;
 }
 
-App::Return_Code
-App::run()
+// ============================================================================
+// Private initialization methods (B1 refactoring)
+// ============================================================================
+
+bool
+App::InitializeGL(IWindow* window)
 {
-    // Инициализация WindowManager
-    if (!pimpl_->window_manager->Initialize())
-    {
-        return EXIT_FAILURE;
-    }
-
-    // Инициализация plugin manager
-    if (!pimpl_->plugin_manager->Initialize())
-    {
-        pimpl_->window_manager->Shutdown();
-        return EXIT_FAILURE;
-    }
-
-    // Создание главного окна
-    auto window = pimpl_->window_manager->CreateWindow(pimpl_->config);
-    if (!window)
-    {
-        pimpl_->plugin_manager->Shutdown();
-        pimpl_->window_manager->Shutdown();
-        return EXIT_FAILURE;
-    }
-
-    // Инициализация OpenGL
     window->MakeContextCurrent();
     pimpl_->gl = std::make_unique<GladGLContext>();
 
@@ -173,9 +161,7 @@ App::run()
 
     if (!gl_loaded)
     {
-        pimpl_->window_manager->DestroyWindow(window);
-        pimpl_->window_manager->Shutdown();
-        return EXIT_FAILURE;
+        return false;
     }
 
     // Настройка OpenGL
@@ -187,54 +173,17 @@ App::run()
     const auto [fb_width, fb_height] = window->GetFramebufferSize();
     pimpl_->gl->Viewport(0, 0, fb_width, fb_height);
 
-    // Настраиваем WindowContext для GLFW callbacks
-    pimpl_->window_context.gl = pimpl_->gl.get();
-    pimpl_->window_context.rml_context = pimpl_->context;
+    return true;
+}
+
+bool
+App::InitializeRmlUi(IWindow* window)
+{
+    const auto [fb_width, fb_height] = window->GetFramebufferSize();
     
-    // Устанавливаем user pointer для callbacks
-    glfwSetWindowUserPointer(window->GetGlfwWindow(), &pimpl_->window_context);
-
-    // Callback для изменения размера framebuffer
-    glfwSetFramebufferSizeCallback(
-        window->GetGlfwWindow(),
-        [](GLFWwindow* glfw_window, int new_width, int new_height)
-        {
-            auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(glfw_window));
-            if (!ctx || !ctx->gl || !ctx->rml_context)
-            {
-                return;
-            }
-            
-            ctx->gl->Viewport(0, 0, new_width, new_height);
-            ctx->rml_context->SetDimensions({new_width, new_height});
-        }
-    );
-
-    // Callback для обновления окна (при resize или необходимости перерисовки)
-    glfwSetWindowRefreshCallback(
-        window->GetGlfwWindow(),
-        [](GLFWwindow* glfw_window)
-        {
-            auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(glfw_window));
-            if (!ctx || !ctx->gl || !ctx->rml_context)
-            {
-                return;
-            }
-            
-            ctx->gl->Clear(GL_COLOR_BUFFER_BIT);
-            ctx->rml_context->Update();
-            ctx->rml_context->Render();
-            glfwSwapBuffers(glfw_window);
-        }
-    );
-
-    // Инициализация InputManager и передача указателя на него в WindowContext
-    pimpl_->input_manager->SetWindow(window->GetGlfwWindow());
-    pimpl_->window_context.input_manager = static_cast<InputManagerImpl*>(pimpl_->input_manager.get());
-
-    // Инициализация RmlUi
+    // Инициализация RmlUi renderer
     pimpl_->render_impl = std::make_unique<Rml::RendererGlad33>(
-        [w = window.get(), gl = pimpl_->gl.get()](void) -> GladGLContext*
+        [w = window, gl = pimpl_->gl.get()](void) -> GladGLContext*
         {
             w->MakeContextCurrent();
             return gl;
@@ -250,9 +199,7 @@ App::run()
     {
         Rml::Log::Message(Rml::Log::LT_ERROR, "Failed to create RmlUi context.");
         Rml::Shutdown();
-        pimpl_->window_manager->DestroyWindow(window);
-        pimpl_->window_manager->Shutdown();
-        return EXIT_FAILURE;
+        return false;
     }
     
     // Обновляем rml_context в window_context для callback
@@ -265,6 +212,12 @@ App::run()
     // Установка RmlUi контекста в InputManager
     pimpl_->input_manager->SetContext(pimpl_->context);
 
+    return true;
+}
+
+bool
+App::LoadFonts()
+{
     // Загрузка шрифтов - сначала из директорий ресурсов, затем по умолчанию
     bool font_loaded = false;
     for (const auto& dir : pimpl_->resource_directories)
@@ -288,36 +241,65 @@ App::run()
         Rml::Log::Message(Rml::Log::LT_WARNING, "Failed to load font face, fallback fonts may be used.");
     }
 
-    // Запуск плагинов (они регистрируют свои view)
-    pimpl_->plugin_manager->StartPlugins();
+    return font_loaded;
+}
 
-    // Пробуем присоединить и показать initial_view через ViewHost
-    if (!pimpl_->initial_view_name.empty())
-    {
-        pimpl_->view_host->AttachView(pimpl_->initial_view_name, nullptr);
-        pimpl_->view_host->ShowView(pimpl_->initial_view_name);
-    }
+void
+App::SetupGlfwCallbacks(IWindow* window)
+{
+    GLFWwindow* glfw_window = Impl::GetGlfwWindow(*window);
+    
+    // Настраиваем WindowContext для GLFW callbacks
+    pimpl_->window_context.gl = pimpl_->gl.get();
+    pimpl_->window_context.rml_context = pimpl_->context;
+    pimpl_->window_context.input_manager = pimpl_->input_manager.get();
+    
+    // Устанавливаем user pointer для callbacks
+    glfwSetWindowUserPointer(glfw_window, &pimpl_->window_context);
 
-    // Если view не загружен (нет плагина), пробуем fallback RML документ
-    if (!pimpl_->view_host->GetActiveView() && !pimpl_->fallback_rml_path.empty())
-    {
-        Rml::Log::Message(Rml::Log::LT_INFO, "Trying to load fallback RML: %s", pimpl_->fallback_rml_path.c_str());
-        auto* document = pimpl_->context->LoadDocument(pimpl_->fallback_rml_path.c_str());
-        
-        if (document)
+    // Callback для изменения размера framebuffer
+    glfwSetFramebufferSizeCallback(
+        glfw_window,
+        [](GLFWwindow* gw, int new_width, int new_height)
         {
-            Rml::Log::Message(Rml::Log::LT_INFO, "Successfully loaded fallback RML: %s", pimpl_->fallback_rml_path.c_str());
-            document->Show();
+            auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(gw));
+            if (!ctx || !ctx->gl || !ctx->rml_context)
+            {
+                return;
+            }
+            
+            ctx->gl->Viewport(0, 0, new_width, new_height);
+            ctx->rml_context->SetDimensions({new_width, new_height});
         }
-        else
-        {
-            Rml::Log::Message(Rml::Log::LT_ERROR, "Failed to load fallback RML document: %s", pimpl_->fallback_rml_path.c_str());
-        }
-    }
+    );
 
-    // Настройка event loop
+    // Callback для обновления окна (при resize или необходимости перерисовки)
+    glfwSetWindowRefreshCallback(
+        glfw_window,
+        [](GLFWwindow* gw)
+        {
+            auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(gw));
+            if (!ctx || !ctx->gl || !ctx->rml_context)
+            {
+                return;
+            }
+            
+            ctx->gl->Clear(GL_COLOR_BUFFER_BIT);
+            ctx->rml_context->Update();
+            ctx->rml_context->Render();
+            glfwSwapBuffers(gw);
+        }
+    );
+
+    // Инициализация InputManager
+    pimpl_->input_manager->SetWindow(glfw_window);
+}
+
+void
+App::SetupEventLoopCallbacks(IWindow* window)
+{
     pimpl_->event_loop->SetShouldCloseCheck(
-        [window = window.get()]() { return window->ShouldClose(); }
+        [window]() { return window->ShouldClose(); }
     );
 
     pimpl_->event_loop->OnUpdate(
@@ -338,7 +320,7 @@ App::run()
     );
 
     pimpl_->event_loop->OnRender(
-        [this, window = window.get()]()
+        [this, window]()
         {
             // Make context current
             window->MakeContextCurrent();
@@ -373,14 +355,109 @@ App::run()
             pimpl_->render_impl.reset();
         }
     );
+}
+
+void
+App::StartPluginsAndViews()
+{
+    // Запуск плагинов (они регистрируют свои view)
+    pimpl_->plugin_manager->StartPlugins();
+
+    // Пробуем присоединить и показать initial_view через ViewHost
+    if (!pimpl_->initial_view_name.empty())
+    {
+        pimpl_->view_host->AttachView(pimpl_->initial_view_name, nullptr);
+        pimpl_->view_host->ShowView(pimpl_->initial_view_name);
+    }
+
+    // Если view не загружен (нет плагина), пробуем fallback RML документ
+    if (!pimpl_->view_host->GetActiveView() && !pimpl_->fallback_rml_path.empty())
+    {
+        Rml::Log::Message(Rml::Log::LT_INFO, "Trying to load fallback RML: %s", pimpl_->fallback_rml_path.c_str());
+        auto* document = pimpl_->context->LoadDocument(pimpl_->fallback_rml_path.c_str());
+        
+        if (document)
+        {
+            Rml::Log::Message(Rml::Log::LT_INFO, "Successfully loaded fallback RML: %s", pimpl_->fallback_rml_path.c_str());
+            document->Show();
+        }
+        else
+        {
+            Rml::Log::Message(Rml::Log::LT_ERROR, "Failed to load fallback RML document: %s", pimpl_->fallback_rml_path.c_str());
+        }
+    }
+}
+
+void
+App::Cleanup(std::shared_ptr<IWindow>& window)
+{
+    pimpl_->plugin_manager->Shutdown();
+    pimpl_->window_manager->DestroyWindow(window);
+    pimpl_->window_manager->Shutdown();
+}
+
+// ============================================================================
+// Main run method
+// ============================================================================
+
+App::Return_Code
+App::run()
+{
+    // Инициализация WindowManager
+    if (!pimpl_->window_manager->Initialize())
+    {
+        return EXIT_FAILURE;
+    }
+
+    // Инициализация plugin manager
+    if (!pimpl_->plugin_manager->Initialize())
+    {
+        pimpl_->window_manager->Shutdown();
+        return EXIT_FAILURE;
+    }
+
+    // Создание главного окна
+    auto window = pimpl_->window_manager->CreateWindow(pimpl_->config);
+    if (!window)
+    {
+        pimpl_->plugin_manager->Shutdown();
+        pimpl_->window_manager->Shutdown();
+        return EXIT_FAILURE;
+    }
+
+    // Инициализация OpenGL
+    if (!InitializeGL(window.get()))
+    {
+        pimpl_->window_manager->DestroyWindow(window);
+        pimpl_->window_manager->Shutdown();
+        return EXIT_FAILURE;
+    }
+
+    // Настройка GLFW callbacks (до инициализации RmlUi, чтобы window_context был готов)
+    SetupGlfwCallbacks(window.get());
+
+    // Инициализация RmlUi
+    if (!InitializeRmlUi(window.get()))
+    {
+        pimpl_->window_manager->DestroyWindow(window);
+        pimpl_->window_manager->Shutdown();
+        return EXIT_FAILURE;
+    }
+
+    // Загрузка шрифтов
+    LoadFonts();
+
+    // Настройка event loop callbacks
+    SetupEventLoopCallbacks(window.get());
+
+    // Запуск плагинов и views
+    StartPluginsAndViews();
 
     // Запуск главного цикла
     pimpl_->event_loop->Run();
 
     // Очистка
-    pimpl_->plugin_manager->Shutdown();
-    pimpl_->window_manager->DestroyWindow(window);
-    pimpl_->window_manager->Shutdown();
+    Cleanup(window);
 
     return EXIT_SUCCESS;
 }

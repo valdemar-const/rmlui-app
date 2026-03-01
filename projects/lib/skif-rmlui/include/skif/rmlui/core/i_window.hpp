@@ -7,8 +7,6 @@
 #include <string>
 #include <string_view>
 
-struct GLFWwindow;
-
 namespace skif::rmlui
 {
 
@@ -25,21 +23,22 @@ struct WindowConfig
 };
 
 /**
- * @brief Интерфейс окна
- * @note Кроссплатформенная абстракция над GLFW окнами
+ * @brief Публичный интерфейс окна
+ * @note Кроссплатформенная абстракция над GLFW окнами.
+ *       GLFW-специфичные методы (GetGlfwWindow) находятся в WindowImpl.
  */
 class IWindow
 {
 public:
     virtual ~IWindow() = default;
 
-    /// Получить нативный дескриптор окна
+    /// Получить нативный дескриптор окна (HWND на Windows, Window на X11, etc.)
     [[nodiscard]] virtual void* GetNativeHandle() noexcept = 0;
 
     /// Получить размер окна в экранных координатах
     [[nodiscard]] virtual Vector2i GetSize() const noexcept = 0;
 
-    /// Получить размер framebuffer
+    /// Получить размер framebuffer (может отличаться от размера окна на HiDPI)
     [[nodiscard]] virtual Vector2i GetFramebufferSize() const noexcept = 0;
 
     /// Установить заголовок окна
@@ -56,11 +55,6 @@ public:
 
     /// Обменять буферы (для double buffering)
     virtual void SwapBuffers() noexcept = 0;
-
-    /// Получить указатель на GLFWwindow (для внутреннего использования)
-    [[nodiscard]] virtual GLFWwindow* GetGlfwWindow() const noexcept = 0;
-
-    // Events - будут добавлены позже с использованием Signal
 };
 
 } // namespace skif::rmlui

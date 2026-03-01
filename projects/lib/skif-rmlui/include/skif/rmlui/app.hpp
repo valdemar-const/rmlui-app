@@ -67,6 +67,15 @@ public:
     void SetFallbackRml(std::string_view rml_path);
 
 private:
+    // Приватные методы инициализации (B1 refactoring)
+    bool InitializeGL(IWindow* window);
+    bool InitializeRmlUi(IWindow* window);
+    bool LoadFonts();
+    void SetupGlfwCallbacks(IWindow* window);
+    void SetupEventLoopCallbacks(IWindow* window);
+    void StartPluginsAndViews();
+    void Cleanup(std::shared_ptr<IWindow>& window);
+
     struct Impl;
     std::unique_ptr<Impl> pimpl_;
 };
