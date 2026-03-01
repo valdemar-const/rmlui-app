@@ -35,6 +35,11 @@ public:
         }
     }
     
+    void OnDetach(Rml::Element* /*element*/) override
+    {
+        delete this;
+    }
+    
 private:
     Callback callback_;
 };
@@ -127,17 +132,6 @@ void
 SamplePanelView::OnUpdate(float /*delta_time*/)
 {
     // Обновление каждый кадр (если нужно)
-}
-
-void
-SamplePanelView::BindEvent(
-    Rml::Element* /*element*/,
-    std::string_view /*event_name*/,
-    std::function<void(Rml::Event&)> /*handler*/)
-{
-    // Примечание: RmlUi использует свой собственный EventListener API
-    // Для полноценной поддержки нужно создать обёртку над std::function
-    // Это будет реализовано в Фазе 5: Input System
 }
 
 // ============================================================================

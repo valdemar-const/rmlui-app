@@ -4,7 +4,10 @@ find_package(RmlUi REQUIRED)
 
 set(target ${PROJECT_NAME})
 add_executable(${target})
-target_sources(${target} PRIVATE main.cpp)
+target_sources(${target} PRIVATE
+    main.cpp
+    plugins/sample_panel.cpp
+)
 target_link_libraries(${target} PRIVATE skif::rmlui::app RmlUi::RmlUi)
 
 # Добавляем include директории для RmlUi (необходимы для плагинов)

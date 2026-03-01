@@ -1,6 +1,7 @@
 #pragma once
 
 #include <skif/rmlui/config.hpp>
+#include <skif/rmlui/core/math_types.hpp>
 
 #include <cstddef>
 #include <string>
@@ -10,15 +11,6 @@ struct GLFWwindow;
 
 namespace skif::rmlui
 {
-
-struct Vector2i
-{
-    int x = 0;
-    int y = 0;
-
-    constexpr Vector2i() noexcept = default;
-    constexpr Vector2i(int x, int y) noexcept : x(x), y(y) {}
-};
 
 struct WindowConfig
 {

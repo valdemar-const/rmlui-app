@@ -26,12 +26,6 @@ public:
     void OnHide() override;
     void OnUpdate(float delta_time) override;
 
-    void BindEvent(
-        Rml::Element* element,
-        std::string_view event_name,
-        std::function<void(Rml::Event&)> handler
-    ) override;
-
 private:
     skif::rmlui::ViewDescriptor descriptor_;
     Rml::ElementDocument* document_ = nullptr;

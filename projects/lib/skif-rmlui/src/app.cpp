@@ -8,6 +8,7 @@
 #include <implementation/view_registry_impl.hpp>
 #include <implementation/view_host_impl.hpp>
 #include <implementation/input_manager_impl.hpp>
+#include <implementation/window_context.hpp>
 
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Factory.h>
@@ -44,6 +45,13 @@ struct App::Impl
     std::unique_ptr<GladGLContext>  gl;
     std::unique_ptr<Rml::RendererGlad33> render_impl;
     Rml::Context* context = nullptr;
+
+    // Единый контекст окна для GLFW callbacks
+    WindowContext window_context;
+
+    // Конфигурация начального view (для B2)
+    std::string initial_view_name;
+    std::string fallback_rml_path;
 };
 
 App::App(int argc, char* argv[])
@@ -118,6 +126,18 @@ App::GetResourceDirectories() const noexcept
     return pimpl_->resource_directories;
 }
 
+void
+App::SetInitialView(std::string_view view_name)
+{
+    pimpl_->initial_view_name = view_name;
+}
+
+void
+App::SetFallbackRml(std::string_view rml_path)
+{
+    pimpl_->fallback_rml_path = rml_path;
+}
+
 App::Return_Code
 App::run()
 {
@@ -167,33 +187,26 @@ App::run()
     const auto [fb_width, fb_height] = window->GetFramebufferSize();
     pimpl_->gl->Viewport(0, 0, fb_width, fb_height);
 
-    // Структура для передачи состояния в callbacks
-    struct WindowState
-    {
-        GladGLContext* gl      = nullptr;
-        Rml::Context*  context = nullptr;
-    };
-    
-    WindowState window_state;
-    window_state.gl      = pimpl_->gl.get();
-    window_state.context = pimpl_->context; // пока nullptr, будет обновлён после создания контекста
+    // Настраиваем WindowContext для GLFW callbacks
+    pimpl_->window_context.gl = pimpl_->gl.get();
+    pimpl_->window_context.rml_context = pimpl_->context;
     
     // Устанавливаем user pointer для callbacks
-    glfwSetWindowUserPointer(window->GetGlfwWindow(), &window_state);
+    glfwSetWindowUserPointer(window->GetGlfwWindow(), &pimpl_->window_context);
 
     // Callback для изменения размера framebuffer
     glfwSetFramebufferSizeCallback(
         window->GetGlfwWindow(),
         [](GLFWwindow* glfw_window, int new_width, int new_height)
         {
-            auto* state = static_cast<WindowState*>(glfwGetWindowUserPointer(glfw_window));
-            if (!state || !state->gl || !state->context)
+            auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(glfw_window));
+            if (!ctx || !ctx->gl || !ctx->rml_context)
             {
                 return;
             }
             
-            state->gl->Viewport(0, 0, new_width, new_height);
-            state->context->SetDimensions({new_width, new_height});
+            ctx->gl->Viewport(0, 0, new_width, new_height);
+            ctx->rml_context->SetDimensions({new_width, new_height});
         }
     );
 
@@ -202,21 +215,22 @@ App::run()
         window->GetGlfwWindow(),
         [](GLFWwindow* glfw_window)
         {
-            auto* state = static_cast<WindowState*>(glfwGetWindowUserPointer(glfw_window));
-            if (!state || !state->gl || !state->context)
+            auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(glfw_window));
+            if (!ctx || !ctx->gl || !ctx->rml_context)
             {
                 return;
             }
             
-            state->gl->Clear(GL_COLOR_BUFFER_BIT);
-            state->context->Update();
-            state->context->Render();
+            ctx->gl->Clear(GL_COLOR_BUFFER_BIT);
+            ctx->rml_context->Update();
+            ctx->rml_context->Render();
             glfwSwapBuffers(glfw_window);
         }
     );
 
-    // Инициализация InputManager
+    // Инициализация InputManager и передача указателя на него в WindowContext
     pimpl_->input_manager->SetWindow(window->GetGlfwWindow());
+    pimpl_->window_context.input_manager = static_cast<InputManagerImpl*>(pimpl_->input_manager.get());
 
     // Инициализация RmlUi
     pimpl_->render_impl = std::make_unique<Rml::RendererGlad33>(
@@ -241,8 +255,8 @@ App::run()
         return EXIT_FAILURE;
     }
     
-    // Обновляем context в window_state для callback
-    window_state.context = pimpl_->context;
+    // Обновляем rml_context в window_context для callback
+    pimpl_->window_context.rml_context = pimpl_->context;
 
     // Создание ViewHost и привязка к контексту
     pimpl_->view_host = std::make_unique<ViewHostImpl>(*pimpl_->view_registry);
@@ -277,39 +291,27 @@ App::run()
     // Запуск плагинов (они регистрируют свои view)
     pimpl_->plugin_manager->StartPlugins();
 
-    // Пробуем присоединить и показать sample_panel через ViewHost
-    // Сначала Attach (создаёт документ), потом Show (показывает его)
-    pimpl_->view_host->AttachView("sample_panel", nullptr);
-    pimpl_->view_host->ShowView("sample_panel");
-
-    // Если view не загружен (нет плагина), пробуем базовый документ
-    if (!pimpl_->view_host->GetActiveView())
+    // Пробуем присоединить и показать initial_view через ViewHost
+    if (!pimpl_->initial_view_name.empty())
     {
-        const char* rml_paths[] = {
-            "assets/ui/basic.rml",
-            "projects/bin/rmlui-app/assets/ui/basic.rml",
-            "../projects/bin/rmlui-app/assets/ui/basic.rml"
-        };
-        
-        Rml::ElementDocument* document = nullptr;
-        for (const auto* path : rml_paths)
-        {
-            Rml::Log::Message(Rml::Log::LT_INFO, "Trying to load RML: %s", path);
-            document = pimpl_->context->LoadDocument(path);
-            if (document)
-            {
-                Rml::Log::Message(Rml::Log::LT_INFO, "Successfully loaded RML: %s", path);
-                break;
-            }
-        }
+        pimpl_->view_host->AttachView(pimpl_->initial_view_name, nullptr);
+        pimpl_->view_host->ShowView(pimpl_->initial_view_name);
+    }
+
+    // Если view не загружен (нет плагина), пробуем fallback RML документ
+    if (!pimpl_->view_host->GetActiveView() && !pimpl_->fallback_rml_path.empty())
+    {
+        Rml::Log::Message(Rml::Log::LT_INFO, "Trying to load fallback RML: %s", pimpl_->fallback_rml_path.c_str());
+        auto* document = pimpl_->context->LoadDocument(pimpl_->fallback_rml_path.c_str());
         
         if (document)
         {
+            Rml::Log::Message(Rml::Log::LT_INFO, "Successfully loaded fallback RML: %s", pimpl_->fallback_rml_path.c_str());
             document->Show();
         }
         else
         {
-            Rml::Log::Message(Rml::Log::LT_ERROR, "Failed to load RML document from all paths!");
+            Rml::Log::Message(Rml::Log::LT_ERROR, "Failed to load fallback RML document: %s", pimpl_->fallback_rml_path.c_str());
         }
     }
 
@@ -358,13 +360,10 @@ App::run()
     pimpl_->event_loop->OnExit(
         [this]()
         {
-            // Закрываем активный view через ViewHost
-            auto* active_view = pimpl_->view_host->GetActiveView();
-            if (active_view)
-            {
-                // ViewHost управляет закрытием документа
-            }
+            // 1. Сначала останавливаем плагины (они могут обращаться к RmlUi)
+            pimpl_->plugin_manager->StopPlugins();
             
+            // 2. Затем очищаем RmlUi
             Rml::SetRenderInterface(nullptr);
             if (pimpl_->context)
             {

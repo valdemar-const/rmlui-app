@@ -1,4 +1,5 @@
 #include <implementation/input_manager_impl.hpp>
+#include <implementation/window_context.hpp>
 
 #include <GLFW/glfw3.h>
 #include <RmlUi/Core/Context.h>
@@ -44,8 +45,8 @@ InputManagerImpl::SetWindow(GLFWwindow* window)
         glfwSetCursorPosCallback(window_, MouseMoveCallback);
         glfwSetScrollCallback(window_, MouseWheelCallback);
         
-        // Store this pointer in user pointer for callbacks
-        glfwSetWindowUserPointer(window_, this);
+        // Примечание: glfwSetWindowUserPointer теперь управляется App::run()
+        // через WindowContext - не устанавливаем здесь
     }
 }
 
@@ -183,11 +184,12 @@ InputManagerImpl::InjectMouseUp(int x, int y, int button, int modifiers)
 void
 InputManagerImpl::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    auto* self = static_cast<InputManagerImpl*>(glfwGetWindowUserPointer(window));
-    if (!self)
+    auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(window));
+    if (!ctx || !ctx->input_manager)
     {
         return;
     }
+    auto* self = ctx->input_manager;
     
     if (key >= 0 && key < 512)
     {
@@ -210,11 +212,12 @@ InputManagerImpl::KeyCallback(GLFWwindow* window, int key, int scancode, int act
 void
 InputManagerImpl::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-    auto* self = static_cast<InputManagerImpl*>(glfwGetWindowUserPointer(window));
-    if (!self)
+    auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(window));
+    if (!ctx || !ctx->input_manager)
     {
         return;
     }
+    auto* self = ctx->input_manager;
     
     if (button >= 0 && button < 8)
     {
@@ -240,11 +243,12 @@ InputManagerImpl::MouseButtonCallback(GLFWwindow* window, int button, int action
 void
 InputManagerImpl::MouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
 {
-    auto* self = static_cast<InputManagerImpl*>(glfwGetWindowUserPointer(window));
-    if (!self)
+    auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(window));
+    if (!ctx || !ctx->input_manager)
     {
         return;
     }
+    auto* self = ctx->input_manager;
     
     const float new_x = static_cast<float>(xpos);
     const float new_y = static_cast<float>(ypos);
@@ -263,11 +267,12 @@ InputManagerImpl::MouseMoveCallback(GLFWwindow* window, double xpos, double ypos
 void
 InputManagerImpl::MouseWheelCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    auto* self = static_cast<InputManagerImpl*>(glfwGetWindowUserPointer(window));
-    if (!self)
+    auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(window));
+    if (!ctx || !ctx->input_manager)
     {
         return;
     }
+    auto* self = ctx->input_manager;
     
     self->mouse_wheel_ += static_cast<float>(yoffset);
 }

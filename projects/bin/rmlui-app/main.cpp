@@ -1,6 +1,6 @@
 #include <skif/rmlui/app.hpp>
 
-#include "plugins/sample_panel.cpp"
+#include "plugins/sample_panel.hpp"
 
 int
 main(int argc, char *argv[])
@@ -11,6 +11,10 @@ main(int argc, char *argv[])
 
     // Регистрируем sample плагин (статическая регистрация)
     app.GetPluginManager().RegisterPlugin(std::make_unique<sample::SamplePanelPlugin>());
+
+    // Устанавливаем начальное view и fallback RML
+    app.SetInitialView("sample_panel");
+    app.SetFallbackRml("assets/ui/basic.rml");
 
     return app.run();
 }

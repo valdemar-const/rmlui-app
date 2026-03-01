@@ -1,11 +1,13 @@
 #pragma once
 
 #include <skif/rmlui/config.hpp>
+#include <skif/rmlui/core/math_types.hpp>
 #include <skif/rmlui/input/key_codes.hpp>
 #include <skif/rmlui/input/mouse_buttons.hpp>
 
 #include <functional>
 #include <cstdint>
+#include <vector>
 
 // Forward declarations
 struct GLFWwindow;
@@ -13,18 +15,6 @@ namespace Rml { class Context; }
 
 namespace skif::rmlui
 {
-
-/**
- * @brief Вектор 2D
- */
-struct Vector2f
-{
-    float x = 0.0f;
-    float y = 0.0f;
-    
-    constexpr Vector2f() noexcept = default;
-    constexpr Vector2f(float x, float y) noexcept : x(x), y(y) {}
-};
 
 /**
  * @brief Сигнал (упрощённая версия)

@@ -44,13 +44,6 @@ public:
 
     /// Вызывается каждый кадр
     virtual void OnUpdate(float delta_time) = 0;
-
-    /// Привязать обработчик события к элементу
-    virtual void BindEvent(
-        Rml::Element* element,
-        std::string_view event_name,
-        std::function<void(Rml::Event&)> handler
-    ) = 0;
 };
 
 /**

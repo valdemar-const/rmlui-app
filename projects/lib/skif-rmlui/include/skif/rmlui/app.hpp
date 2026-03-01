@@ -60,6 +60,12 @@ public:
     /// Получить директории ресурсов
     [[nodiscard]] const std::vector<std::string>& GetResourceDirectories() const noexcept;
 
+    /// Установить начальное view для отображения
+    void SetInitialView(std::string_view view_name);
+
+    /// Установить fallback RML документ (используется если view не загружен)
+    void SetFallbackRml(std::string_view rml_path);
+
 private:
     struct Impl;
     std::unique_ptr<Impl> pimpl_;
