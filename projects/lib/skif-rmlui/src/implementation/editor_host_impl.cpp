@@ -177,6 +177,78 @@ EditorHostImpl::CreateEditorEmbedded(
     return true;
 }
 
+bool
+EditorHostImpl::RenameInstance(std::string_view old_id, std::string_view new_id)
+{
+    const std::string old_str(old_id);
+    const std::string new_str(new_id);
+
+    auto it = instances_.find(old_str);
+    if (it == instances_.end())
+    {
+        return false;
+    }
+
+    if (instances_.contains(new_str))
+    {
+        return false;
+    }
+
+    auto node = instances_.extract(it);
+    node.key() = new_str;
+    instances_.insert(std::move(node));
+
+    Rml::Log::Message(Rml::Log::LT_INFO,
+        "EditorHost: Renamed instance '%s' -> '%s'.",
+        old_id.data(), new_id.data());
+
+    return true;
+}
+
+bool
+EditorHostImpl::ReattachEditorEmbedded(
+    std::string_view instance_id,
+    Rml::Element* content_element,
+    Rml::ElementDocument* layout_document)
+{
+    if (!content_element || !layout_document)
+    {
+        return false;
+    }
+
+    const std::string id_str(instance_id);
+    auto it = instances_.find(id_str);
+    if (it == instances_.end())
+    {
+        return false;
+    }
+
+    auto& inst = it->second;
+
+    // Получаем дескриптор для чтения RML
+    const auto& descriptor = inst.editor->GetDescriptor();
+
+    // Читаем RML файл и извлекаем body-контент
+    std::string rml_content = ReadFile(descriptor.rml_path);
+    if (!rml_content.empty())
+    {
+        std::string body_content = ExtractBodyContent(rml_content);
+        content_element->SetInnerRML(body_content);
+    }
+
+    // Обновляем document reference
+    inst.document = layout_document;
+
+    // Перепривязываем event listeners через OnCreatedInContainer
+    inst.editor->OnCreatedInContainer(layout_document, content_element);
+
+    Rml::Log::Message(Rml::Log::LT_INFO,
+        "EditorHost: Reattached editor '%s' (instance '%s').",
+        descriptor.name.c_str(), instance_id.data());
+
+    return true;
+}
+
 void
 EditorHostImpl::DestroyEditor(std::string_view instance_id)
 {

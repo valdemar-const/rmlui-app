@@ -56,6 +56,22 @@ public:
         Rml::ElementDocument* layout_document
     );
 
+    /// Переименовать instance_id существующего editor
+    /// @return true если переименование успешно
+    bool RenameInstance(std::string_view old_id, std::string_view new_id);
+
+    /// Перепривязать существующий editor к новому layout документу
+    /// Используется при пересоздании layout (Split/Merge) для сохранения состояния editor
+    /// @param instance_id Уникальный идентификатор экземпляра
+    /// @param content_element Новый элемент panel-content
+    /// @param layout_document Новый layout документ
+    /// @return true если editor успешно перепривязан
+    [[nodiscard]] bool ReattachEditorEmbedded(
+        std::string_view instance_id,
+        Rml::Element* content_element,
+        Rml::ElementDocument* layout_document
+    );
+
 private:
     /// Прочитать файл и вернуть содержимое
     [[nodiscard]] std::string ReadFile(const std::string& path) const;

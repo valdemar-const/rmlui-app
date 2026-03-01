@@ -87,6 +87,7 @@ SplitLayoutImpl::Split(
     // Копируем имена ДО модификации узла — string_view может ссылаться на editor_name этого узла
     std::string old_editor_name = result.node->editor_name;
     std::string new_editor_name_str(new_editor_name);
+    std::string old_instance_id = MakeInstanceId(result.node);
 
     result.node->editor_name.clear();
     result.node->direction = direction;
@@ -94,7 +95,16 @@ SplitLayoutImpl::Split(
     result.node->first = SplitNode::MakeLeaf(old_editor_name);
     result.node->second = SplitNode::MakeLeaf(new_editor_name_str);
 
-    // Пересоздаём layout — создаёт новые editor instances
+    // Переименовываем существующий editor instance: old_id → new_id (для first-узла)
+    // Это сохраняет состояние editor (counter и т.д.)
+    std::string new_first_id = MakeInstanceId(result.node->first.get());
+    auto* editor_host_impl = dynamic_cast<EditorHostImpl*>(editor_host_);
+    if (editor_host_impl)
+    {
+        editor_host_impl->RenameInstance(old_instance_id, new_first_id);
+    }
+
+    // Пересоздаём layout — существующие editors перепривязываются, новые создаются
     ApplyLayout();
     return true;
 }
@@ -280,13 +290,10 @@ SplitLayoutImpl::ApplyLayout()
         return;
     }
 
-    // Уничтожаем все существующие editor instances
-    if (editor_host_)
-    {
-        editor_host_->DestroyAll();
-    }
+    // НЕ уничтожаем editor instances — сохраняем состояние
+    // Только закрываем layout документ (DOM элементы теряются, но editor instances остаются)
 
-    // Закрыть предыдущий layout документ
+    // Закрыть предыдущий layout документ (контроллеры и divider state)
     CloseLayoutDocument();
 
     // Генерируем полный RML документ
@@ -303,6 +310,8 @@ SplitLayoutImpl::ApplyLayout()
     }
 
     // Загружаем Editor RML контент в panel-content div для каждого leaf
+    // Для существующих editors — перевставляет контент и перепривязывает events
+    // Для новых editors — создаёт instance
     LoadEditorContentRecursive(root_.get());
 
     // Создаём PanelContainerController для каждого leaf
@@ -586,14 +595,25 @@ SplitLayoutImpl::LoadEditorContentRecursive(const SplitNode* node)
             return;
         }
 
-        // Создаём editor через EditorHostImpl::CreateEditorEmbedded
+        // Проверяем, существует ли уже editor instance
         auto* editor_host_impl = dynamic_cast<EditorHostImpl*>(editor_host_);
         if (editor_host_impl)
         {
-            if (editor_host_impl->CreateEditorEmbedded(
-                    node->editor_name, instance_id, content_element, layout_document_))
+            IEditor* existing = editor_host_->GetEditor(instance_id);
+            if (existing)
             {
-                editor_host_impl->ActivateEditor(instance_id);
+                // Editor уже существует — перепривязываем к новому layout документу
+                (void)editor_host_impl->ReattachEditorEmbedded(
+                    instance_id, content_element, layout_document_);
+            }
+            else
+            {
+                // Новый editor — создаём
+                if (editor_host_impl->CreateEditorEmbedded(
+                        node->editor_name, instance_id, content_element, layout_document_))
+                {
+                    editor_host_impl->ActivateEditor(instance_id);
+                }
             }
         }
         else

@@ -54,6 +54,8 @@ SampleEditor::OnCreatedInContainer(Rml::ElementDocument* document, Rml::Element*
     content_container_ = content_container;
     // Embedded mode — scoped поиск внутри content_container
     BindEventsToContainer(content_container);
+    // Обновляем отображение — counter_ мог быть изменён до reattach
+    UpdateCounterDisplay();
 }
 
 void
