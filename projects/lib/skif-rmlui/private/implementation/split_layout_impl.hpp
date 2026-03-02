@@ -44,7 +44,7 @@ public:
     void SetRoot(std::unique_ptr<SplitNode> root) override;
     [[nodiscard]] const SplitNode* GetRoot() const noexcept override;
     bool Split(const SplitNode* panel, SplitDirection direction,
-               std::string_view new_editor_name, float ratio) override;
+               std::string_view new_editor_name, float ratio, bool split_to_first) override;
     bool Merge(const SplitNode* split_node, bool keep_first) override;
     bool SwitchEditor(const SplitNode* panel, std::string_view new_editor_name) override;
     void Update(float delta_time) override;

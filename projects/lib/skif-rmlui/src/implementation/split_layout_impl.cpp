@@ -71,7 +71,8 @@ SplitLayoutImpl::Split(
     const SplitNode* panel,
     SplitDirection direction,
     std::string_view new_editor_name,
-    float ratio)
+    float ratio,
+    bool split_to_first)
 {
     if (!panel || !root_ || !panel->IsLeaf())
     {
@@ -92,16 +93,34 @@ SplitLayoutImpl::Split(
     result.node->editor_name.clear();
     result.node->direction = direction;
     result.node->ratio = ratio;
-    result.node->first = SplitNode::MakeLeaf(old_editor_name);
-    result.node->second = SplitNode::MakeLeaf(new_editor_name_str);
 
-    // Переименовываем существующий editor instance: old_id → new_id (для first-узла)
-    // Это сохраняет состояние editor (counter и т.д.)
-    std::string new_first_id = MakeInstanceId(result.node->first.get());
-    auto* editor_host_impl = dynamic_cast<EditorHostImpl*>(editor_host_);
-    if (editor_host_impl)
+    if (split_to_first)
     {
-        editor_host_impl->RenameInstance(old_instance_id, new_first_id);
+        // Новая панель создаётся слева (или сверху для вертикального split)
+        result.node->first = SplitNode::MakeLeaf(new_editor_name_str);
+        result.node->second = SplitNode::MakeLeaf(old_editor_name);
+
+        // Переименовываем существующий editor instance: old_id → new_id (для second-узла)
+        std::string new_second_id = MakeInstanceId(result.node->second.get());
+        auto* editor_host_impl = dynamic_cast<EditorHostImpl*>(editor_host_);
+        if (editor_host_impl)
+        {
+            editor_host_impl->RenameInstance(old_instance_id, new_second_id);
+        }
+    }
+    else
+    {
+        // Новая панель создаётся справа (или снизу для вертикального split) — по умолчанию
+        result.node->first = SplitNode::MakeLeaf(old_editor_name);
+        result.node->second = SplitNode::MakeLeaf(new_editor_name_str);
+
+        // Переименовываем существующий editor instance: old_id → new_id (для first-узла)
+        std::string new_first_id = MakeInstanceId(result.node->first.get());
+        auto* editor_host_impl = dynamic_cast<EditorHostImpl*>(editor_host_);
+        if (editor_host_impl)
+        {
+            editor_host_impl->RenameInstance(old_instance_id, new_first_id);
+        }
     }
 
     // Пересоздаём layout — существующие editors перепривязываются, новые создаются
@@ -506,8 +525,8 @@ SplitLayoutImpl::GeneratePanelContainerRML(const SplitNode* node, std::string& o
     output += indent + "    </div>\n";
 
     // Hot corners (top)
-    output += indent + "    <div class=\"hot-corner hot-corner-tl\" data-action=\"split\" data-instance=\"" + instance_id + "\"></div>\n";
-    output += indent + "    <div class=\"hot-corner hot-corner-tr\" data-action=\"split\" data-instance=\"" + instance_id + "\"></div>\n";
+    output += indent + "    <div class=\"hot-corner hot-corner-tl\" data-action=\"split\" data-corner=\"tl\" data-instance=\"" + instance_id + "\"></div>\n";
+    output += indent + "    <div class=\"hot-corner hot-corner-tr\" data-action=\"split\" data-corner=\"tr\" data-instance=\"" + instance_id + "\"></div>\n";
 
     // Content area — Editor RML будет вставлен сюда через SetInnerRML
     output += indent + "    <div class=\"panel-content\" data-instance=\"" + instance_id + "\"></div>\n";

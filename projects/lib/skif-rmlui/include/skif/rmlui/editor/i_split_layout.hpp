@@ -49,11 +49,14 @@ public:
     /// @param direction Направление разделения
     /// @param new_editor_name Имя редактора для новой панели
     /// @param ratio Пропорция разделения
+    /// @param split_to_first Если true — новая панель создаётся в first (слева/сверху),
+    ///                       если false — в second (справа/снизу). По умолчанию false.
     virtual bool Split(
         const SplitNode* panel,
         SplitDirection direction,
         std::string_view new_editor_name,
-        float ratio = 0.5f
+        float ratio = 0.5f,
+        bool split_to_first = false
     ) = 0;
 
     /// Объединить split-узел (удалить разделение, оставить один из дочерних)

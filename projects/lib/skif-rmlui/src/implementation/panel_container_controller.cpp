@@ -147,7 +147,7 @@ PanelContainerController::OnHotCornerMouseDown(Rml::Event& event, std::string_vi
     if (action == "split")
     {
         // Определяем направление:
-        // По умолчанию — Horizontal (split вправо)
+        // По умолчанию — Horizontal
         // С зажатым Alt — Vertical (split вниз)
         bool alt_pressed = event.GetParameter<bool>("alt_key", false);
 
@@ -155,13 +155,22 @@ PanelContainerController::OnHotCornerMouseDown(Rml::Event& event, std::string_vi
             ? SplitDirection::Vertical
             : SplitDirection::Horizontal;
 
+        // Определяем какой угол нажат (tl = top-left, tr = top-right)
+        // tl должен создавать панель слева (split_to_first = true)
+        // tr должен создавать панель справа (split_to_first = false)
+        Rml::Element* target = event.GetTargetElement();
+        std::string corner = target ? target->GetAttribute<Rml::String>("data-corner", "") : "";
+        bool split_to_first = (corner == "tl");
+
         Rml::Log::Message(Rml::Log::LT_INFO,
-            "PanelContainerController: Split requested for instance '%s', direction=%s.",
+            "PanelContainerController: Split requested for instance '%s', direction=%s, corner=%s, split_to_first=%s.",
             instance_id_.c_str(),
-            direction == SplitDirection::Horizontal ? "horizontal" : "vertical");
+            direction == SplitDirection::Horizontal ? "horizontal" : "vertical",
+            corner.c_str(),
+            split_to_first ? "true" : "false");
 
         // Используем тот же тип редактора для новой панели
-        layout_.Split(node_, direction, node_->editor_name, 0.5f);
+        layout_.Split(node_, direction, node_->editor_name, 0.5f, split_to_first);
     }
     else if (action == "merge")
     {
