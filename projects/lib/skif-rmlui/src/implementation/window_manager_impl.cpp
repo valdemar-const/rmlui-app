@@ -50,7 +50,7 @@ WindowManagerImpl::Shutdown() noexcept
 }
 
 std::shared_ptr<IWindow>
-WindowManagerImpl::CreateWindow(const WindowConfig& config)
+WindowManagerImpl::CreateWindow(const WindowConfig &config)
 {
     assert(initialized_ && "WindowManager must be initialized before creating windows");
 
@@ -65,14 +65,17 @@ WindowManagerImpl::DestroyWindow(std::shared_ptr<IWindow> window)
 {
     // Удаляем окно из списка
     auto it = std::remove_if(
-        windows_.begin(),
-        windows_.end(),
-        [&window](const std::shared_ptr<WindowImpl>& w) { return w.get() == window.get(); }
+            windows_.begin(),
+            windows_.end(),
+            [&window](const std::shared_ptr<WindowImpl> &w)
+            {
+                return w.get() == window.get();
+            }
     );
     windows_.erase(it, windows_.end());
 }
 
-IWindow*
+IWindow *
 WindowManagerImpl::GetMainWindow() const noexcept
 {
     if (windows_.empty())
@@ -87,7 +90,7 @@ WindowManagerImpl::GetWindows() const
 {
     std::vector<std::shared_ptr<IWindow>> result;
     result.reserve(windows_.size());
-    for (const auto& w : windows_)
+    for (const auto &w : windows_)
     {
         result.push_back(w);
     }

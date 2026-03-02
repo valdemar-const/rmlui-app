@@ -11,10 +11,10 @@ namespace skif::rmlui
  */
 enum class MouseButton
 {
-    Left = 0,
-    Right = 1,
+    Left   = 0,
+    Right  = 1,
     Middle = 2,
-    
+
     // Additional buttons
     Button4 = 3,
     Button5 = 4,

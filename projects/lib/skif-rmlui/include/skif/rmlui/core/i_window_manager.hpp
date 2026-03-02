@@ -14,7 +14,8 @@ namespace skif::rmlui
  */
 class IWindowManager
 {
-public:
+  public:
+
     virtual ~IWindowManager() = default;
 
     /// Инициализировать GLFW (вызывается один раз при старте приложения)
@@ -24,13 +25,13 @@ public:
     virtual void Shutdown() noexcept = 0;
 
     /// Создать новое окно
-    [[nodiscard]] virtual std::shared_ptr<IWindow> CreateWindow(const WindowConfig& config) = 0;
+    [[nodiscard]] virtual std::shared_ptr<IWindow> CreateWindow(const WindowConfig &config) = 0;
 
     /// Удалить окно
     virtual void DestroyWindow(std::shared_ptr<IWindow> window) = 0;
 
     /// Получить главное окно
-    [[nodiscard]] virtual IWindow* GetMainWindow() const noexcept = 0;
+    [[nodiscard]] virtual IWindow *GetMainWindow() const noexcept = 0;
 
     /// Получить все окна
     [[nodiscard]] virtual std::vector<std::shared_ptr<IWindow>> GetWindows() const = 0;

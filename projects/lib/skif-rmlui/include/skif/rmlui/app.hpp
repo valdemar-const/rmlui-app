@@ -26,16 +26,17 @@ namespace skif::rmlui
  */
 class App
 {
-public:
+  public:
+
     using Return_Code = int;
 
-    App(int argc, char* argv[]);
+    App(int argc, char *argv[]);
     ~App();
 
-    App(const App&)            = delete;
-    App& operator=(const App&) = delete;
-    App(App&&)                 = delete;
-    App& operator=(App&&)      = delete;
+    App(const App &)            = delete;
+    App &operator=(const App &) = delete;
+    App(App &&)                 = delete;
+    App &operator=(App &&)      = delete;
 
     /// Запустить приложение
     Return_Code run();
@@ -45,30 +46,30 @@ public:
     // ========================================================================
 
     /// Получить менеджер окон
-    [[nodiscard]] IWindowManager& GetWindowManager() noexcept;
+    [[nodiscard]] IWindowManager &GetWindowManager() noexcept;
 
     /// Получить менеджер плагинов
-    [[nodiscard]] IPluginManager& GetPluginManager() noexcept;
+    [[nodiscard]] IPluginManager &GetPluginManager() noexcept;
 
     /// Получить менеджер ввода
-    [[nodiscard]] IInputManager& GetInputManager() noexcept;
+    [[nodiscard]] IInputManager &GetInputManager() noexcept;
 
     /// Получить конфигурацию
-    [[nodiscard]] const WindowConfig& GetConfig() const noexcept;
-    WindowConfig& GetConfig() noexcept;
+    [[nodiscard]] const WindowConfig &GetConfig() const noexcept;
+    WindowConfig                     &GetConfig() noexcept;
 
     // ========================================================================
     // Editor Platform
     // ========================================================================
 
     /// Получить реестр редакторов — contribution point
-    [[nodiscard]] IEditorRegistry& GetEditorRegistry() noexcept;
+    [[nodiscard]] IEditorRegistry &GetEditorRegistry() noexcept;
 
     /// Получить хост редакторов
-    [[nodiscard]] IEditorHost& GetEditorHost() noexcept;
+    [[nodiscard]] IEditorHost &GetEditorHost() noexcept;
 
     /// Получить layout
-    [[nodiscard]] ISplitLayout& GetSplitLayout() noexcept;
+    [[nodiscard]] ISplitLayout &GetSplitLayout() noexcept;
 
     /// Установить начальный layout (вызывать до run())
     void SetInitialLayout(std::unique_ptr<SplitNode> root);
@@ -78,10 +79,10 @@ public:
     // ========================================================================
 
     /// Получить реестр представлений (deprecated — используйте GetEditorRegistry)
-    [[nodiscard]] IViewRegistry& GetViewRegistry() noexcept;
+    [[nodiscard]] IViewRegistry &GetViewRegistry() noexcept;
 
     /// Получить хост представлений (deprecated — используйте GetEditorHost)
-    [[nodiscard]] IViewHost& GetViewHost() noexcept;
+    [[nodiscard]] IViewHost &GetViewHost() noexcept;
 
     // ========================================================================
     // Resources
@@ -91,7 +92,7 @@ public:
     void AddResourceDirectory(std::string_view path);
 
     /// Получить директории ресурсов
-    [[nodiscard]] const std::vector<std::string>& GetResourceDirectories() const noexcept;
+    [[nodiscard]] const std::vector<std::string> &GetResourceDirectories() const noexcept;
 
     /// Установить начальное view для отображения (deprecated — используйте SetInitialLayout)
     void SetInitialView(std::string_view view_name);
@@ -99,7 +100,8 @@ public:
     /// Установить fallback RML документ
     void SetFallbackRml(std::string_view rml_path);
 
-private:
+  private:
+
     struct Impl;
     std::unique_ptr<Impl> pimpl_;
 };

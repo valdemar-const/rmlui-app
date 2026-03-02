@@ -19,13 +19,13 @@ InputManagerImpl::InputManagerImpl()
 InputManagerImpl::~InputManagerImpl() = default;
 
 void
-InputManagerImpl::SetWindow(GLFWwindow* window)
+InputManagerImpl::SetWindow(GLFWwindow *window)
 {
     if (window_ == window)
     {
         return;
     }
-    
+
     // Disconnect from old window
     if (window_)
     {
@@ -34,9 +34,9 @@ InputManagerImpl::SetWindow(GLFWwindow* window)
         glfwSetCursorPosCallback(window_, nullptr);
         glfwSetScrollCallback(window_, nullptr);
     }
-    
+
     window_ = window;
-    
+
     // Connect to new window
     if (window_)
     {
@@ -44,7 +44,7 @@ InputManagerImpl::SetWindow(GLFWwindow* window)
         glfwSetMouseButtonCallback(window_, MouseButtonCallback);
         glfwSetCursorPosCallback(window_, MouseMoveCallback);
         glfwSetScrollCallback(window_, MouseWheelCallback);
-        
+
         // Примечание: glfwSetWindowUserPointer теперь управляется App::run()
         // через WindowContext - не устанавливаем здесь
     }
@@ -56,8 +56,8 @@ InputManagerImpl::Update()
     // Reset pressed keys (they're only valid for one frame)
     key_pressed_.fill(false);
     mouse_wheel_delta_ = mouse_wheel_;
-    mouse_wheel_ = 0.0f;
-    
+    mouse_wheel_       = 0.0f;
+
     // Reset mouse delta
     mouse_delta_ = {0.0f, 0.0f};
 }
@@ -126,7 +126,7 @@ InputManagerImpl::GetMouseWheel() const
 // ============================================================================
 
 void
-InputManagerImpl::SetContext(Rml::Context* context)
+InputManagerImpl::SetContext(Rml::Context *context)
 {
     context_ = context;
 }
@@ -182,20 +182,20 @@ InputManagerImpl::InjectMouseUp(int x, int y, int button, int modifiers)
 // ============================================================================
 
 void
-InputManagerImpl::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+InputManagerImpl::KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-    auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(window));
+    auto *ctx = static_cast<WindowContext *>(glfwGetWindowUserPointer(window));
     if (!ctx || !ctx->input_manager)
     {
         return;
     }
-    auto* self = ctx->input_manager;
-    
+    auto *self = ctx->input_manager;
+
     if (key >= 0 && key < 512)
     {
         if (action == GLFW_PRESS)
         {
-            self->key_states_[key] = true;
+            self->key_states_[key]  = true;
             self->key_pressed_[key] = true;
             self->OnKeyDown(static_cast<KeyCode>(key));
             self->InjectKeyDown(key, mods);
@@ -210,70 +210,64 @@ InputManagerImpl::KeyCallback(GLFWwindow* window, int key, int scancode, int act
 }
 
 void
-InputManagerImpl::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+InputManagerImpl::MouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
 {
-    auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(window));
+    auto *ctx = static_cast<WindowContext *>(glfwGetWindowUserPointer(window));
     if (!ctx || !ctx->input_manager)
     {
         return;
     }
-    auto* self = ctx->input_manager;
-    
+    auto *self = ctx->input_manager;
+
     if (button >= 0 && button < 8)
     {
         if (action == GLFW_PRESS)
         {
             self->mouse_button_states_[button] = true;
             self->OnMouseDown(static_cast<MouseButton>(button));
-            self->InjectMouseDown(static_cast<int>(self->mouse_position_.x),
-                                  static_cast<int>(self->mouse_position_.y),
-                                  button, mods);
+            self->InjectMouseDown(static_cast<int>(self->mouse_position_.x), static_cast<int>(self->mouse_position_.y), button, mods);
         }
         else if (action == GLFW_RELEASE)
         {
             self->mouse_button_states_[button] = false;
             self->OnMouseUp(static_cast<MouseButton>(button));
-            self->InjectMouseUp(static_cast<int>(self->mouse_position_.x),
-                                static_cast<int>(self->mouse_position_.y),
-                                button, mods);
+            self->InjectMouseUp(static_cast<int>(self->mouse_position_.x), static_cast<int>(self->mouse_position_.y), button, mods);
         }
     }
 }
 
 void
-InputManagerImpl::MouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
+InputManagerImpl::MouseMoveCallback(GLFWwindow *window, double xpos, double ypos)
 {
-    auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(window));
+    auto *ctx = static_cast<WindowContext *>(glfwGetWindowUserPointer(window));
     if (!ctx || !ctx->input_manager)
     {
         return;
     }
-    auto* self = ctx->input_manager;
-    
+    auto *self = ctx->input_manager;
+
     const float new_x = static_cast<float>(xpos);
     const float new_y = static_cast<float>(ypos);
-    
-    self->mouse_delta_.x = new_x - self->mouse_position_.x;
-    self->mouse_delta_.y = new_y - self->mouse_position_.y;
+
+    self->mouse_delta_.x    = new_x - self->mouse_position_.x;
+    self->mouse_delta_.y    = new_y - self->mouse_position_.y;
     self->mouse_position_.x = new_x;
     self->mouse_position_.y = new_y;
-    
+
     self->OnMouseMove(self->mouse_position_);
-    self->InjectMouseMove(static_cast<int>(new_x), static_cast<int>(new_y),
-                          static_cast<int>(self->mouse_delta_.x),
-                          static_cast<int>(self->mouse_delta_.y));
+    self->InjectMouseMove(static_cast<int>(new_x), static_cast<int>(new_y), static_cast<int>(self->mouse_delta_.x), static_cast<int>(self->mouse_delta_.y));
 }
 
 void
-InputManagerImpl::MouseWheelCallback(GLFWwindow* window, double xoffset, double yoffset)
+InputManagerImpl::MouseWheelCallback(GLFWwindow *window, double xoffset, double yoffset)
 {
-    auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(window));
+    auto *ctx = static_cast<WindowContext *>(glfwGetWindowUserPointer(window));
     if (!ctx || !ctx->input_manager)
     {
         return;
     }
-    auto* self = ctx->input_manager;
-    
+    auto *self = ctx->input_manager;
+
     self->mouse_wheel_ += static_cast<float>(yoffset);
 }
 

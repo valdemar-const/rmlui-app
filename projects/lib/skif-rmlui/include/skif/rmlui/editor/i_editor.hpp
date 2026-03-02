@@ -32,20 +32,22 @@ namespace skif::rmlui
  */
 class IEditor
 {
-public:
+  public:
+
     virtual ~IEditor() = default;
 
     /// Получить дескриптор редактора
-    [[nodiscard]] virtual const EditorDescriptor& GetDescriptor() const noexcept = 0;
+    [[nodiscard]] virtual const EditorDescriptor &GetDescriptor() const noexcept = 0;
 
     /// Вызывается при создании — RML документ загружен и привязан
-    virtual void OnCreated(Rml::ElementDocument* document) = 0;
+    virtual void OnCreated(Rml::ElementDocument *document) = 0;
 
     /// Вызывается при создании в embedded режиме (внутри panel container)
     /// @param document Layout документ
     /// @param content_container Элемент panel-content, содержащий RML контент этого Editor'а
     /// @note По умолчанию вызывает OnCreated(document). Переопределите для scoped поиска элементов.
-    virtual void OnCreatedInContainer(Rml::ElementDocument* document, Rml::Element* content_container)
+    virtual void
+    OnCreatedInContainer(Rml::ElementDocument *document, Rml::Element *content_container)
     {
         OnCreated(document);
     }
@@ -63,7 +65,8 @@ public:
     virtual void OnDispose() noexcept = 0;
 
     /// Получить текст статус бара (опционально, по умолчанию пустой)
-    [[nodiscard]] virtual std::string_view GetStatusText() const noexcept
+    [[nodiscard]] virtual std::string_view
+    GetStatusText() const noexcept
     {
         return {};
     }

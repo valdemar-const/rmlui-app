@@ -11,9 +11,10 @@
 namespace skif::rmlui
 {
 
-EditorHostImpl::EditorHostImpl(IEditorRegistry& registry)
+EditorHostImpl::EditorHostImpl(IEditorRegistry &registry)
     : registry_(registry)
-{}
+{
+}
 
 EditorHostImpl::~EditorHostImpl()
 {
@@ -21,7 +22,7 @@ EditorHostImpl::~EditorHostImpl()
 }
 
 void
-EditorHostImpl::SetContext(Rml::Context* context)
+EditorHostImpl::SetContext(Rml::Context *context)
 {
     context_ = context;
 }
@@ -40,17 +41,15 @@ EditorHostImpl::CreateEditor(std::string_view editor_name, std::string_view inst
     // Проверяем, не существует ли уже экземпляр
     if (instances_.contains(id_str))
     {
-        Rml::Log::Message(Rml::Log::LT_WARNING,
-            "EditorHost: Instance '%s' already exists.", instance_id.data());
+        Rml::Log::Message(Rml::Log::LT_WARNING, "EditorHost: Instance '%s' already exists.", instance_id.data());
         return false;
     }
 
     // Получаем дескриптор
-    const EditorDescriptor* descriptor = registry_.GetDescriptor(editor_name);
+    const EditorDescriptor *descriptor = registry_.GetDescriptor(editor_name);
     if (!descriptor)
     {
-        Rml::Log::Message(Rml::Log::LT_ERROR,
-            "EditorHost: Editor type '%s' not found in registry.", editor_name.data());
+        Rml::Log::Message(Rml::Log::LT_ERROR, "EditorHost: Editor type '%s' not found in registry.", editor_name.data());
         return false;
     }
 
@@ -58,18 +57,15 @@ EditorHostImpl::CreateEditor(std::string_view editor_name, std::string_view inst
     auto editor = registry_.CreateEditor(editor_name);
     if (!editor)
     {
-        Rml::Log::Message(Rml::Log::LT_ERROR,
-            "EditorHost: Failed to create editor '%s'.", editor_name.data());
+        Rml::Log::Message(Rml::Log::LT_ERROR, "EditorHost: Failed to create editor '%s'.", editor_name.data());
         return false;
     }
 
     // Загружаем RML документ
-    Rml::ElementDocument* document = context_->LoadDocument(descriptor->rml_path.c_str());
+    Rml::ElementDocument *document = context_->LoadDocument(descriptor->rml_path.c_str());
     if (!document)
     {
-        Rml::Log::Message(Rml::Log::LT_ERROR,
-            "EditorHost: Failed to load RML '%s' for editor '%s'.",
-            descriptor->rml_path.c_str(), editor_name.data());
+        Rml::Log::Message(Rml::Log::LT_ERROR, "EditorHost: Failed to load RML '%s' for editor '%s'.", descriptor->rml_path.c_str(), editor_name.data());
         return false;
     }
 
@@ -85,24 +81,22 @@ EditorHostImpl::CreateEditor(std::string_view editor_name, std::string_view inst
 
     instances_[id_str] = std::move(instance);
 
-    Rml::Log::Message(Rml::Log::LT_INFO,
-        "EditorHost: Created editor '%s' (instance '%s').",
-        editor_name.data(), instance_id.data());
+    Rml::Log::Message(Rml::Log::LT_INFO, "EditorHost: Created editor '%s' (instance '%s').", editor_name.data(), instance_id.data());
 
     return true;
 }
 
 bool
 EditorHostImpl::CreateEditorEmbedded(
-    std::string_view editor_name,
-    std::string_view instance_id,
-    Rml::Element* content_element,
-    Rml::ElementDocument* layout_document)
+        std::string_view      editor_name,
+        std::string_view      instance_id,
+        Rml::Element         *content_element,
+        Rml::ElementDocument *layout_document
+)
 {
     if (!context_ || !content_element || !layout_document)
     {
-        Rml::Log::Message(Rml::Log::LT_ERROR,
-            "EditorHost: Invalid parameters for CreateEditorEmbedded.");
+        Rml::Log::Message(Rml::Log::LT_ERROR, "EditorHost: Invalid parameters for CreateEditorEmbedded.");
         return false;
     }
 
@@ -111,17 +105,15 @@ EditorHostImpl::CreateEditorEmbedded(
     // Проверяем, не существует ли уже экземпляр
     if (instances_.contains(id_str))
     {
-        Rml::Log::Message(Rml::Log::LT_WARNING,
-            "EditorHost: Instance '%s' already exists.", instance_id.data());
+        Rml::Log::Message(Rml::Log::LT_WARNING, "EditorHost: Instance '%s' already exists.", instance_id.data());
         return false;
     }
 
     // Получаем дескриптор
-    const EditorDescriptor* descriptor = registry_.GetDescriptor(editor_name);
+    const EditorDescriptor *descriptor = registry_.GetDescriptor(editor_name);
     if (!descriptor)
     {
-        Rml::Log::Message(Rml::Log::LT_ERROR,
-            "EditorHost: Editor type '%s' not found in registry.", editor_name.data());
+        Rml::Log::Message(Rml::Log::LT_ERROR, "EditorHost: Editor type '%s' not found in registry.", editor_name.data());
         return false;
     }
 
@@ -129,8 +121,7 @@ EditorHostImpl::CreateEditorEmbedded(
     auto editor = registry_.CreateEditor(editor_name);
     if (!editor)
     {
-        Rml::Log::Message(Rml::Log::LT_ERROR,
-            "EditorHost: Failed to create editor '%s'.", editor_name.data());
+        Rml::Log::Message(Rml::Log::LT_ERROR, "EditorHost: Failed to create editor '%s'.", editor_name.data());
         return false;
     }
 
@@ -138,8 +129,7 @@ EditorHostImpl::CreateEditorEmbedded(
     std::string rml_content = ReadFile(descriptor->rml_path);
     if (rml_content.empty())
     {
-        Rml::Log::Message(Rml::Log::LT_ERROR,
-            "EditorHost: Failed to read RML file '%s'.", descriptor->rml_path.c_str());
+        Rml::Log::Message(Rml::Log::LT_ERROR, "EditorHost: Failed to read RML file '%s'.", descriptor->rml_path.c_str());
         return false;
     }
 
@@ -147,8 +137,7 @@ EditorHostImpl::CreateEditorEmbedded(
     std::string body_content = ExtractBodyContent(rml_content);
     if (body_content.empty())
     {
-        Rml::Log::Message(Rml::Log::LT_WARNING,
-            "EditorHost: Empty body in RML '%s'.", descriptor->rml_path.c_str());
+        Rml::Log::Message(Rml::Log::LT_WARNING, "EditorHost: Empty body in RML '%s'.", descriptor->rml_path.c_str());
     }
 
     // Стили Editor'а подключаются через <link> в layout RML (rcss_path в EditorDescriptor)
@@ -170,9 +159,7 @@ EditorHostImpl::CreateEditorEmbedded(
 
     instances_[id_str] = std::move(instance);
 
-    Rml::Log::Message(Rml::Log::LT_INFO,
-        "EditorHost: Created embedded editor '%s' (instance '%s').",
-        editor_name.data(), instance_id.data());
+    Rml::Log::Message(Rml::Log::LT_INFO, "EditorHost: Created embedded editor '%s' (instance '%s').", editor_name.data(), instance_id.data());
 
     return true;
 }
@@ -194,22 +181,21 @@ EditorHostImpl::RenameInstance(std::string_view old_id, std::string_view new_id)
         return false;
     }
 
-    auto node = instances_.extract(it);
+    auto node  = instances_.extract(it);
     node.key() = new_str;
     instances_.insert(std::move(node));
 
-    Rml::Log::Message(Rml::Log::LT_INFO,
-        "EditorHost: Renamed instance '%s' -> '%s'.",
-        old_id.data(), new_id.data());
+    Rml::Log::Message(Rml::Log::LT_INFO, "EditorHost: Renamed instance '%s' -> '%s'.", old_id.data(), new_id.data());
 
     return true;
 }
 
 bool
 EditorHostImpl::ReattachEditorEmbedded(
-    std::string_view instance_id,
-    Rml::Element* content_element,
-    Rml::ElementDocument* layout_document)
+        std::string_view      instance_id,
+        Rml::Element         *content_element,
+        Rml::ElementDocument *layout_document
+)
 {
     if (!content_element || !layout_document)
     {
@@ -217,16 +203,16 @@ EditorHostImpl::ReattachEditorEmbedded(
     }
 
     const std::string id_str(instance_id);
-    auto it = instances_.find(id_str);
+    auto              it = instances_.find(id_str);
     if (it == instances_.end())
     {
         return false;
     }
 
-    auto& inst = it->second;
+    auto &inst = it->second;
 
     // Получаем дескриптор для чтения RML
-    const auto& descriptor = inst.editor->GetDescriptor();
+    const auto &descriptor = inst.editor->GetDescriptor();
 
     // Читаем RML файл и извлекаем body-контент
     std::string rml_content = ReadFile(descriptor.rml_path);
@@ -242,9 +228,7 @@ EditorHostImpl::ReattachEditorEmbedded(
     // Перепривязываем event listeners через OnCreatedInContainer
     inst.editor->OnCreatedInContainer(layout_document, content_element);
 
-    Rml::Log::Message(Rml::Log::LT_INFO,
-        "EditorHost: Reattached editor '%s' (instance '%s').",
-        descriptor.name.c_str(), instance_id.data());
+    Rml::Log::Message(Rml::Log::LT_INFO, "EditorHost: Reattached editor '%s' (instance '%s').", descriptor.name.c_str(), instance_id.data());
 
     return true;
 }
@@ -253,13 +237,13 @@ void
 EditorHostImpl::DestroyEditor(std::string_view instance_id)
 {
     const std::string id_str(instance_id);
-    auto it = instances_.find(id_str);
+    auto              it = instances_.find(id_str);
     if (it == instances_.end())
     {
         return;
     }
 
-    auto& inst = it->second;
+    auto &inst = it->second;
 
     // Деактивируем если активен
     if (inst.active)
@@ -283,13 +267,13 @@ void
 EditorHostImpl::ActivateEditor(std::string_view instance_id)
 {
     const std::string id_str(instance_id);
-    auto it = instances_.find(id_str);
+    auto              it = instances_.find(id_str);
     if (it == instances_.end())
     {
         return;
     }
 
-    auto& inst = it->second;
+    auto &inst = it->second;
     if (!inst.active)
     {
         if (inst.document && !inst.embedded)
@@ -305,13 +289,13 @@ void
 EditorHostImpl::DeactivateEditor(std::string_view instance_id)
 {
     const std::string id_str(instance_id);
-    auto it = instances_.find(id_str);
+    auto              it = instances_.find(id_str);
     if (it == instances_.end())
     {
         return;
     }
 
-    auto& inst = it->second;
+    auto &inst = it->second;
     if (inst.active)
     {
         inst.editor->OnDeactivate();
@@ -323,11 +307,11 @@ EditorHostImpl::DeactivateEditor(std::string_view instance_id)
     }
 }
 
-IEditor*
+IEditor *
 EditorHostImpl::GetEditor(std::string_view instance_id) const
 {
     const std::string id_str(instance_id);
-    auto it = instances_.find(id_str);
+    auto              it = instances_.find(id_str);
     if (it != instances_.end())
     {
         return it->second.editor.get();
@@ -339,7 +323,7 @@ void
 EditorHostImpl::UpdateEditor(std::string_view instance_id, float delta_time)
 {
     const std::string id_str(instance_id);
-    auto it = instances_.find(id_str);
+    auto              it = instances_.find(id_str);
     if (it != instances_.end() && it->second.active)
     {
         it->second.editor->OnUpdate(delta_time);
@@ -349,7 +333,7 @@ EditorHostImpl::UpdateEditor(std::string_view instance_id, float delta_time)
 void
 EditorHostImpl::UpdateAll(float delta_time)
 {
-    for (auto& [id, inst] : instances_)
+    for (auto &[id, inst] : instances_)
     {
         if (inst.active)
         {
@@ -362,7 +346,7 @@ void
 EditorHostImpl::DestroyAll()
 {
     // Деактивируем и уничтожаем все экземпляры
-    for (auto& [id, inst] : instances_)
+    for (auto &[id, inst] : instances_)
     {
         if (inst.active)
         {
@@ -383,7 +367,7 @@ EditorHostImpl::DestroyAll()
 // ============================================================================
 
 std::string
-EditorHostImpl::ReadFile(const std::string& path) const
+EditorHostImpl::ReadFile(const std::string &path) const
 {
     std::ifstream file(path);
     if (!file.is_open())
@@ -397,7 +381,7 @@ EditorHostImpl::ReadFile(const std::string& path) const
 }
 
 std::string
-EditorHostImpl::ExtractBodyContent(const std::string& rml_content) const
+EditorHostImpl::ExtractBodyContent(const std::string &rml_content) const
 {
     // Ищем <body> и </body> теги
     auto body_start = rml_content.find("<body");
@@ -424,7 +408,7 @@ EditorHostImpl::ExtractBodyContent(const std::string& rml_content) const
 }
 
 std::string
-EditorHostImpl::ExtractStyleContent(const std::string& rml_content) const
+EditorHostImpl::ExtractStyleContent(const std::string &rml_content) const
 {
     // Ищем <style> и </style> теги
     auto style_start = rml_content.find("<style");

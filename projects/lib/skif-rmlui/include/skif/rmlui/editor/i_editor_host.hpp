@@ -22,11 +22,12 @@ namespace skif::rmlui
  */
 class IEditorHost
 {
-public:
+  public:
+
     virtual ~IEditorHost() = default;
 
     /// Установить RmlUi контекст
-    virtual void SetContext(Rml::Context* context) = 0;
+    virtual void SetContext(Rml::Context *context) = 0;
 
     /// Создать и активировать экземпляр редактора по имени
     /// @param editor_name Имя зарегистрированного типа редактора
@@ -44,7 +45,7 @@ public:
     virtual void DeactivateEditor(std::string_view instance_id) = 0;
 
     /// Получить экземпляр редактора по instance_id
-    [[nodiscard]] virtual IEditor* GetEditor(std::string_view instance_id) const = 0;
+    [[nodiscard]] virtual IEditor *GetEditor(std::string_view instance_id) const = 0;
 
     /// Обновить конкретный редактор
     virtual void UpdateEditor(std::string_view instance_id, float delta_time) = 0;

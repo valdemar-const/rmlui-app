@@ -29,11 +29,12 @@ struct WindowConfig
  */
 class IWindow
 {
-public:
+  public:
+
     virtual ~IWindow() = default;
 
     /// Получить нативный дескриптор окна (HWND на Windows, Window на X11, etc.)
-    [[nodiscard]] virtual void* GetNativeHandle() noexcept = 0;
+    [[nodiscard]] virtual void *GetNativeHandle() noexcept = 0;
 
     /// Получить размер окна в экранных координатах
     [[nodiscard]] virtual Vector2i GetSize() const noexcept = 0;

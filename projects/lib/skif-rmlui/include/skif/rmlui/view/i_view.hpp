@@ -24,14 +24,15 @@ namespace skif::rmlui
  */
 class IView
 {
-public:
+  public:
+
     virtual ~IView() = default;
 
     /// Получить дескриптор view
-    [[nodiscard]] virtual const ViewDescriptor& GetDescriptor() const noexcept = 0;
+    [[nodiscard]] virtual const ViewDescriptor &GetDescriptor() const noexcept = 0;
 
     /// Вызывается при создании документа
-    virtual void OnCreated(Rml::ElementDocument* document) = 0;
+    virtual void OnCreated(Rml::ElementDocument *document) = 0;
 
     /// Вызывается при уничтожении документа
     virtual void OnDestroyed() noexcept = 0;

@@ -12,15 +12,15 @@ namespace skif::rmlui
 enum class KeyCode
 {
     Unknown = 0,
-    
+
     // Special keys
-    Space = 32,
+    Space      = 32,
     Apostrophe = 39,
-    Comma = 44,
-    Minus = 45,
-    Period = 46,
-    Slash = 47,
-    
+    Comma      = 44,
+    Minus      = 45,
+    Period     = 46,
+    Slash      = 47,
+
     // Numbers
     Num0 = 48,
     Num1 = 49,
@@ -32,11 +32,11 @@ enum class KeyCode
     Num7 = 55,
     Num8 = 56,
     Num9 = 57,
-    
+
     // Semicolon and equal
     Semicolon = 59,
-    Equal = 61,
-    
+    Equal     = 61,
+
     // Letters
     A = 65,
     B = 66,
@@ -64,54 +64,54 @@ enum class KeyCode
     X = 88,
     Y = 89,
     Z = 90,
-    
+
     // Brackets
-    LeftBracket = 91,
-    Backslash = 92,
+    LeftBracket  = 91,
+    Backslash    = 92,
     RightBracket = 93,
-    GraveAccent = 96,
-    
+    GraveAccent  = 96,
+
     // Function keys
-    Escape = 256,
-    Enter = 257,
-    Tab = 258,
+    Escape    = 256,
+    Enter     = 257,
+    Tab       = 258,
     Backspace = 259,
-    Insert = 260,
-    Delete = 261,
-    
+    Insert    = 260,
+    Delete    = 261,
+
     Right = 262,
-    Left = 263,
-    Down = 264,
-    Up = 265,
-    
-    PageUp = 266,
+    Left  = 263,
+    Down  = 264,
+    Up    = 265,
+
+    PageUp   = 266,
     PageDown = 267,
-    Home = 268,
-    End = 269,
-    
+    Home     = 268,
+    End      = 269,
+
     // F-keys
-    F1 = 290,
-    F2 = 291,
-    F3 = 292,
-    F4 = 293,
-    F5 = 294,
-    F6 = 295,
-    F7 = 296,
-    F8 = 297,
-    F9 = 298,
+    F1  = 290,
+    F2  = 291,
+    F3  = 292,
+    F4  = 293,
+    F5  = 294,
+    F6  = 295,
+    F7  = 296,
+    F8  = 297,
+    F9  = 298,
     F10 = 299,
     F11 = 300,
     F12 = 301,
-    
+
     // Modifiers
-    LeftShift = 340,
-    LeftControl = 341,
-    LeftAlt = 342,
-    LeftSuper = 343,
-    RightShift = 344,
+    LeftShift    = 340,
+    LeftControl  = 341,
+    LeftAlt      = 342,
+    LeftSuper    = 343,
+    RightShift   = 344,
     RightControl = 345,
-    RightAlt = 346,
-    RightSuper = 347,
+    RightAlt     = 346,
+    RightSuper   = 347,
 };
 
 } // namespace skif::rmlui

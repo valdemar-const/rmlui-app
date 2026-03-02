@@ -37,48 +37,48 @@ namespace skif::rmlui
 
 struct App::Impl
 {
-    WindowConfig                      config;
-    std::vector<std::string>          resource_directories;
+    WindowConfig             config;
+    std::vector<std::string> resource_directories;
 
     // Core
-    std::unique_ptr<IWindowManager>   window_manager;
-    std::unique_ptr<IEventLoop>       event_loop;
+    std::unique_ptr<IWindowManager>    window_manager;
+    std::unique_ptr<IEventLoop>        event_loop;
     std::unique_ptr<PluginManagerImpl> plugin_manager;
-    std::unique_ptr<InputManagerImpl> input_manager;
+    std::unique_ptr<InputManagerImpl>  input_manager;
 
     // Legacy View System (deprecated)
-    std::unique_ptr<IViewRegistry>    view_registry;
-    std::unique_ptr<IViewHost>        view_host;
+    std::unique_ptr<IViewRegistry> view_registry;
+    std::unique_ptr<IViewHost>     view_host;
 
     // Editor Platform
-    std::unique_ptr<IEditorRegistry>  editor_registry;
-    std::unique_ptr<IEditorHost>      editor_host;
-    std::unique_ptr<ISplitLayout>     split_layout;
+    std::unique_ptr<IEditorRegistry> editor_registry;
+    std::unique_ptr<IEditorHost>     editor_host;
+    std::unique_ptr<ISplitLayout>    split_layout;
 
     // RmlUi state
-    std::unique_ptr<GladGLContext>         gl;
-    std::unique_ptr<Rml::RendererGlad33>  render_impl;
-    Rml::Context* context = nullptr;
+    std::unique_ptr<GladGLContext>       gl;
+    std::unique_ptr<Rml::RendererGlad33> render_impl;
+    Rml::Context                        *context = nullptr;
 
     // Единый контекст окна для GLFW callbacks
     WindowContext window_context;
 
     // Конфигурация
-    std::string initial_view_name;
-    std::string fallback_rml_path;
+    std::string                initial_view_name;
+    std::string                fallback_rml_path;
     std::unique_ptr<SplitNode> initial_layout;
 
     // ========================================================================
     // Private initialization methods
     // ========================================================================
 
-    bool InitializeGL(IWindow* window)
+    bool
+    InitializeGL(IWindow *window)
     {
         window->MakeContextCurrent();
         gl = std::make_unique<GladGLContext>();
 
-        const bool gl_loaded = GLAD_MAKE_VERSION(3, 3) >=
-            gladLoadGLContext(gl.get(), (GLADloadfunc)glfwGetProcAddress);
+        const bool gl_loaded = GLAD_MAKE_VERSION(3, 3) >= gladLoadGLContext(gl.get(), (GLADloadfunc)glfwGetProcAddress);
 
         if (!gl_loaded)
         {
@@ -96,16 +96,17 @@ struct App::Impl
         return true;
     }
 
-    bool InitializeRmlUi(IWindow* window)
+    bool
+    InitializeRmlUi(IWindow *window)
     {
         const auto [fb_width, fb_height] = window->GetFramebufferSize();
 
         render_impl = std::make_unique<Rml::RendererGlad33>(
-            [w = window, gl_ctx = gl.get()](void) -> GladGLContext*
-            {
-                w->MakeContextCurrent();
-                return gl_ctx;
-            }
+                [w = window, gl_ctx = gl.get()](void) -> GladGLContext *
+                {
+                    w->MakeContextCurrent();
+                    return gl_ctx;
+                }
         );
 
         Rml::SetRenderInterface(render_impl.get());
@@ -134,13 +135,14 @@ struct App::Impl
         return true;
     }
 
-    bool LoadFonts(const std::vector<std::string>& resource_dirs)
+    bool
+    LoadFonts(const std::vector<std::string> &resource_dirs)
     {
         bool font_loaded = false;
-        for (const auto& dir : resource_dirs)
+        for (const auto &dir : resource_dirs)
         {
             const std::string font_path = dir + "/fonts/IBM_Plex_Mono/IBMPlexMono-Regular.ttf";
-            font_loaded = Rml::LoadFontFace(font_path.c_str());
+            font_loaded                 = Rml::LoadFontFace(font_path.c_str());
             if (font_loaded)
             {
                 break;
@@ -160,115 +162,121 @@ struct App::Impl
         return font_loaded;
     }
 
-    void SetupGlfwCallbacks(IWindow* window)
+    void
+    SetupGlfwCallbacks(IWindow *window)
     {
-        auto* glfw_window = static_cast<GLFWwindow*>(window->GetNativeHandle());
+        auto *glfw_window = static_cast<GLFWwindow *>(window->GetNativeHandle());
 
-        window_context.gl = gl.get();
-        window_context.rml_context = context;
+        window_context.gl            = gl.get();
+        window_context.rml_context   = context;
         window_context.input_manager = input_manager.get();
 
         glfwSetWindowUserPointer(glfw_window, &window_context);
 
         glfwSetFramebufferSizeCallback(
-            glfw_window,
-            [](GLFWwindow* gw, int new_width, int new_height)
-            {
-                auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(gw));
-                if (!ctx || !ctx->gl || !ctx->rml_context)
+                glfw_window,
+                [](GLFWwindow *gw, int new_width, int new_height)
                 {
-                    return;
-                }
+                    auto *ctx = static_cast<WindowContext *>(glfwGetWindowUserPointer(gw));
+                    if (!ctx || !ctx->gl || !ctx->rml_context)
+                    {
+                        return;
+                    }
 
-                ctx->gl->Viewport(0, 0, new_width, new_height);
-                ctx->rml_context->SetDimensions({new_width, new_height});
-            }
+                    ctx->gl->Viewport(0, 0, new_width, new_height);
+                    ctx->rml_context->SetDimensions({new_width, new_height});
+                }
         );
 
         glfwSetWindowRefreshCallback(
-            glfw_window,
-            [](GLFWwindow* gw)
-            {
-                auto* ctx = static_cast<WindowContext*>(glfwGetWindowUserPointer(gw));
-                if (!ctx || !ctx->gl || !ctx->rml_context)
+                glfw_window,
+                [](GLFWwindow *gw)
                 {
-                    return;
-                }
+                    auto *ctx = static_cast<WindowContext *>(glfwGetWindowUserPointer(gw));
+                    if (!ctx || !ctx->gl || !ctx->rml_context)
+                    {
+                        return;
+                    }
 
-                ctx->gl->Disable(GL_SCISSOR_TEST);
-                ctx->gl->Clear(GL_COLOR_BUFFER_BIT);
-                ctx->rml_context->Update();
-                ctx->rml_context->Render();
-                glfwSwapBuffers(gw);
-            }
+                    ctx->gl->Disable(GL_SCISSOR_TEST);
+                    ctx->gl->Clear(GL_COLOR_BUFFER_BIT);
+                    ctx->rml_context->Update();
+                    ctx->rml_context->Render();
+                    glfwSwapBuffers(gw);
+                }
         );
 
         input_manager->SetWindow(glfw_window);
     }
 
-    void SetupEventLoopCallbacks(IWindow* window)
+    void
+    SetupEventLoopCallbacks(IWindow *window)
     {
         event_loop->SetShouldCloseCheck(
-            [window]() { return window->ShouldClose(); }
+                [window]()
+                {
+                    return window->ShouldClose();
+                }
         );
 
         event_loop->OnUpdate(
-            [this](float dt)
-            {
-                window_manager->PollEvents();
-                input_manager->Update();
-
-                // Рекурсивное обновление всех редакторов через SplitLayout
-                split_layout->Update(dt);
-
-                if (context)
+                [this](float dt)
                 {
-                    context->Update();
+                    window_manager->PollEvents();
+                    input_manager->Update();
+
+                    // Рекурсивное обновление всех редакторов через SplitLayout
+                    split_layout->Update(dt);
+
+                    if (context)
+                    {
+                        context->Update();
+                    }
                 }
-            }
         );
 
         event_loop->OnRender(
-            [this, window]()
-            {
-                window->MakeContextCurrent();
-
-                // Сбрасываем scissor test перед очисткой — RmlUi может оставить его включённым
-                gl->Disable(GL_SCISSOR_TEST);
-                gl->Clear(GL_COLOR_BUFFER_BIT);
-
-                if (context)
+                [this, window]()
                 {
-                    context->Render();
-                }
+                    window->MakeContextCurrent();
 
-                window->SwapBuffers();
-            }
+                    // Сбрасываем scissor test перед очисткой — RmlUi может оставить его включённым
+                    gl->Disable(GL_SCISSOR_TEST);
+                    gl->Clear(GL_COLOR_BUFFER_BIT);
+
+                    if (context)
+                    {
+                        context->Render();
+                    }
+
+                    window->SwapBuffers();
+                }
         );
 
         event_loop->OnExit(
-            [this]()
-            {
-                // 1. Уничтожаем редакторы
-                split_layout->SetRoot(nullptr);
-                editor_host->DestroyAll();
-
-                // 2. Останавливаем плагины
-                plugin_manager->StopPlugins();
-
-                // 3. Очищаем RmlUi
-                Rml::SetRenderInterface(nullptr);
-                if (context)
+                [this]()
                 {
-                    Rml::RemoveContext(context->GetName());
+                    // 1. Уничтожаем редакторы
+                    split_layout->SetRoot(nullptr);
+                    editor_host->DestroyAll();
+
+                    // 2. Останавливаем плагины
+                    plugin_manager->StopPlugins();
+
+                    // 3. Очищаем RmlUi
+                    Rml::SetRenderInterface(nullptr);
+                    if (context)
+                    {
+                        Rml::RemoveContext(context->GetName());
+                    }
+                    Rml::Shutdown();
+                    render_impl.reset();
                 }
-                Rml::Shutdown();
-                render_impl.reset();
-            }
         );
     }
 
-    void StartPluginsAndEditors()
+    void
+    StartPluginsAndEditors()
     {
         // Запуск плагинов (они регистрируют редакторы через contribution point)
         plugin_manager->StartPlugins();
@@ -297,13 +305,13 @@ struct App::Impl
         }
 
         // Fallback RML — загружаем только если нет ни layout, ни legacy view
-        const bool has_layout = split_layout->GetRoot() != nullptr;
+        const bool has_layout      = split_layout->GetRoot() != nullptr;
         const bool has_legacy_view = view_host && view_host->GetActiveView() != nullptr;
 
         if (!has_layout && !has_legacy_view && !fallback_rml_path.empty())
         {
             Rml::Log::Message(Rml::Log::LT_INFO, "Trying to load fallback RML: %s", fallback_rml_path.c_str());
-            auto* document = context->LoadDocument(fallback_rml_path.c_str());
+            auto *document = context->LoadDocument(fallback_rml_path.c_str());
             if (document)
             {
                 document->Show();
@@ -315,7 +323,8 @@ struct App::Impl
         }
     }
 
-    void Cleanup(std::shared_ptr<IWindow>& window)
+    void
+    Cleanup(std::shared_ptr<IWindow> &window)
     {
         plugin_manager->Shutdown();
         window_manager->DestroyWindow(window);
@@ -327,7 +336,7 @@ struct App::Impl
 // App public methods
 // ============================================================================
 
-App::App(int argc, char* argv[])
+App::App(int argc, char *argv[])
     : pimpl_(std::make_unique<Impl>())
 {
     // Core
@@ -337,14 +346,14 @@ App::App(int argc, char* argv[])
     pimpl_->input_manager  = std::make_unique<InputManagerImpl>();
 
     // Legacy View System
-    pimpl_->view_registry  = std::make_unique<ViewRegistryImpl>();
+    pimpl_->view_registry = std::make_unique<ViewRegistryImpl>();
 
     // Editor Platform
     pimpl_->editor_registry = std::make_unique<EditorRegistryImpl>();
     pimpl_->editor_host     = std::make_unique<EditorHostImpl>(
-        *pimpl_->editor_registry
+            *pimpl_->editor_registry
     );
-    pimpl_->split_layout    = std::make_unique<SplitLayoutImpl>();
+    pimpl_->split_layout = std::make_unique<SplitLayoutImpl>();
     pimpl_->split_layout->SetEditorHost(pimpl_->editor_host.get());
     pimpl_->split_layout->SetEditorRegistry(pimpl_->editor_registry.get());
 
@@ -355,50 +364,50 @@ App::App(int argc, char* argv[])
 
 App::~App() = default;
 
-IWindowManager&
+IWindowManager &
 App::GetWindowManager() noexcept
 {
     return *pimpl_->window_manager;
 }
 
-IPluginManager&
+IPluginManager &
 App::GetPluginManager() noexcept
 {
     return *pimpl_->plugin_manager;
 }
 
-IInputManager&
+IInputManager &
 App::GetInputManager() noexcept
 {
     return *pimpl_->input_manager;
 }
 
-const WindowConfig&
+const WindowConfig &
 App::GetConfig() const noexcept
 {
     return pimpl_->config;
 }
 
-WindowConfig&
+WindowConfig &
 App::GetConfig() noexcept
 {
     return pimpl_->config;
 }
 
 // Editor Platform
-IEditorRegistry&
+IEditorRegistry &
 App::GetEditorRegistry() noexcept
 {
     return *pimpl_->editor_registry;
 }
 
-IEditorHost&
+IEditorHost &
 App::GetEditorHost() noexcept
 {
     return *pimpl_->editor_host;
 }
 
-ISplitLayout&
+ISplitLayout &
 App::GetSplitLayout() noexcept
 {
     return *pimpl_->split_layout;
@@ -411,13 +420,13 @@ App::SetInitialLayout(std::unique_ptr<SplitNode> root)
 }
 
 // Legacy View System
-IViewRegistry&
+IViewRegistry &
 App::GetViewRegistry() noexcept
 {
     return *pimpl_->view_registry;
 }
 
-IViewHost&
+IViewHost &
 App::GetViewHost() noexcept
 {
     assert(pimpl_->view_host && "GetViewHost() called before run()");
@@ -431,7 +440,7 @@ App::AddResourceDirectory(std::string_view path)
     pimpl_->resource_directories.emplace_back(path);
 }
 
-const std::vector<std::string>&
+const std::vector<std::string> &
 App::GetResourceDirectories() const noexcept
 {
     return pimpl_->resource_directories;

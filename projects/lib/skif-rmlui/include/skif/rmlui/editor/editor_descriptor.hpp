@@ -14,9 +14,9 @@ namespace skif::rmlui
  */
 struct MenuEntry
 {
-    std::string label;       // Отображаемый текст: "Save", "Undo"
-    std::string action_id;   // Идентификатор действия: "editor.save"
-    std::string shortcut;    // Горячая клавиша: "Ctrl+S", "F5"
+    std::string label;     // Отображаемый текст: "Save", "Undo"
+    std::string action_id; // Идентификатор действия: "editor.save"
+    std::string shortcut;  // Горячая клавиша: "Ctrl+S", "F5"
 
     MenuEntry() = default;
 
@@ -24,7 +24,8 @@ struct MenuEntry
         : label(label)
         , action_id(action_id)
         , shortcut(shortcut)
-    {}
+    {
+    }
 };
 
 /**
@@ -34,12 +35,12 @@ struct MenuEntry
  */
 struct EditorDescriptor
 {
-    std::string name;           // Уникальный идентификатор: "3d_viewport", "properties"
-    std::string display_name;   // Отображаемое имя: "3D Viewport", "Properties"
-    std::string rml_path;       // Путь к RML файлу
-    std::string rcss_path;      // Путь к RCSS файлу стилей (опционально)
-    std::string icon;           // Иконка для меню выбора редактора (опционально)
-    std::string category;       // Категория: "General", "Animation", "Modeling"
+    std::string name;         // Уникальный идентификатор: "3d_viewport", "properties"
+    std::string display_name; // Отображаемое имя: "3D Viewport", "Properties"
+    std::string rml_path;     // Путь к RML файлу
+    std::string rcss_path;    // Путь к RCSS файлу стилей (опционально)
+    std::string icon;         // Иконка для меню выбора редактора (опционально)
+    std::string category;     // Категория: "General", "Animation", "Modeling"
 
     /// Записи меню редактора (header bar)
     std::vector<MenuEntry> menu_entries;
@@ -47,16 +48,17 @@ struct EditorDescriptor
     EditorDescriptor() = default;
 
     EditorDescriptor(
-        std::string_view name,
-        std::string_view display_name,
-        std::string_view rml_path,
-        std::string_view category = "General"
+            std::string_view name,
+            std::string_view display_name,
+            std::string_view rml_path,
+            std::string_view category = "General"
     )
         : name(name)
         , display_name(display_name.empty() ? std::string(name) : std::string(display_name))
         , rml_path(rml_path)
         , category(category)
-    {}
+    {
+    }
 };
 
 } // namespace skif::rmlui

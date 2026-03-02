@@ -16,21 +16,23 @@ namespace skif::rmlui
  */
 class ViewRegistryImpl final : public IViewRegistry
 {
-public:
-    ViewRegistryImpl() = default;
+  public:
+
+    ViewRegistryImpl()           = default;
     ~ViewRegistryImpl() override = default;
 
     // IViewRegistry
-    void RegisterView(ViewDescriptor descriptor, ViewFactory factory) override;
-    [[nodiscard]] std::unique_ptr<IView> CreateView(std::string_view name) const override;
-    [[nodiscard]] const ViewDescriptor* GetDescriptor(std::string_view name) const override;
-    [[nodiscard]] std::vector<const ViewDescriptor*> GetAllDescriptors() const override;
-    [[nodiscard]] std::vector<const ViewDescriptor*> GetDescriptorsByCategory(
-        std::string_view category
+    void                                              RegisterView(ViewDescriptor descriptor, ViewFactory factory) override;
+    [[nodiscard]] std::unique_ptr<IView>              CreateView(std::string_view name) const override;
+    [[nodiscard]] const ViewDescriptor               *GetDescriptor(std::string_view name) const override;
+    [[nodiscard]] std::vector<const ViewDescriptor *> GetAllDescriptors() const override;
+    [[nodiscard]] std::vector<const ViewDescriptor *> GetDescriptorsByCategory(
+            std::string_view category
     ) const override;
     [[nodiscard]] std::vector<std::string> GetCategories() const override;
 
-private:
+  private:
+
     struct ViewEntry
     {
         ViewDescriptor descriptor;

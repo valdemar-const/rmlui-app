@@ -10,7 +10,7 @@ namespace skif::rmlui
 LayoutEngineImpl::LayoutEngineImpl() = default;
 
 void
-LayoutEngineImpl::SetContext(Rml::Context* context)
+LayoutEngineImpl::SetContext(Rml::Context *context)
 {
     context_ = context;
 }
@@ -22,14 +22,14 @@ LayoutEngineImpl::SetRoot(std::unique_ptr<LayoutNode> root)
     ApplyLayout();
 }
 
-const LayoutNode*
+const LayoutNode *
 LayoutEngineImpl::GetRoot() const
 {
     return root_.get();
 }
 
 bool
-LayoutEngineImpl::SplitPanel(Rml::Element* panel, SplitDirection direction, float ratio)
+LayoutEngineImpl::SplitPanel(Rml::Element *panel, SplitDirection direction, float ratio)
 {
     if (!panel || !root_)
     {
@@ -37,44 +37,44 @@ LayoutEngineImpl::SplitPanel(Rml::Element* panel, SplitDirection direction, floa
     }
 
     // Найти существующий узел для этой панели
-    LayoutNode* node = FindNodeByElement(root_.get(), panel);
+    LayoutNode *node = FindNodeByElement(root_.get(), panel);
     if (!node || node->is_splitter)
     {
         return false;
     }
 
     // Создать новый сплиттер
-    auto splitter = std::make_unique<LayoutNode>();
+    auto splitter         = std::make_unique<LayoutNode>();
     splitter->is_splitter = true;
-    splitter->direction = direction;
-    splitter->ratio = ratio;
+    splitter->direction   = direction;
+    splitter->ratio       = ratio;
 
     // Создать новую панель (пустую)
     auto new_panel = std::make_unique<LayoutNode>();
-    
+
     // Переместить текущую панель в first
-    splitter->first = std::make_unique<LayoutNode>(node->view_name);
+    splitter->first            = std::make_unique<LayoutNode>(node->view_name);
     splitter->first->view_name = node->view_name;
-    
+
     // Новую панель в second
     splitter->second = std::move(new_panel);
 
     // Найти родителя и заменить
     // TODO: implement parent replacement
-    
+
     ApplyLayout();
     return true;
 }
 
 bool
-LayoutEngineImpl::MergePanels(Rml::Element* /*first*/, Rml::Element* /*second*/)
+LayoutEngineImpl::MergePanels(Rml::Element * /*first*/, Rml::Element * /*second*/)
 {
     // TODO: implement merge
     return false;
 }
 
 void
-LayoutEngineImpl::BeginDrag(Rml::Element* splitter)
+LayoutEngineImpl::BeginDrag(Rml::Element *splitter)
 {
     if (!splitter)
     {
@@ -82,8 +82,8 @@ LayoutEngineImpl::BeginDrag(Rml::Element* splitter)
     }
 
     dragging_splitter_ = splitter;
-    dragging_node_ = FindNodeByElement(root_.get(), splitter);
-    
+    dragging_node_     = FindNodeByElement(root_.get(), splitter);
+
     if (dragging_node_)
     {
         drag_start_ratio_ = dragging_node_->ratio;
@@ -105,7 +105,7 @@ void
 LayoutEngineImpl::EndDrag()
 {
     dragging_splitter_ = nullptr;
-    dragging_node_ = nullptr;
+    dragging_node_     = nullptr;
 }
 
 std::string
@@ -122,7 +122,7 @@ LayoutEngineImpl::GenerateRML() const
 }
 
 void
-LayoutEngineImpl::GenerateRMLRecursive(const LayoutNode* node, std::string& output, int depth) const
+LayoutEngineImpl::GenerateRMLRecursive(const LayoutNode *node, std::string &output, int depth) const
 {
     if (!node)
     {
@@ -130,26 +130,27 @@ LayoutEngineImpl::GenerateRMLRecursive(const LayoutNode* node, std::string& outp
     }
 
     std::string indent(depth * 4, ' ');
-    
+
     if (node->is_splitter)
     {
         // Сплиттер - создаём контейнер
-        const char* direction_attr = (node->direction == SplitDirection::Horizontal) 
-            ? "horizontal" : "vertical";
-        
+        const char *direction_attr = (node->direction == SplitDirection::Horizontal)
+                                           ? "horizontal"
+                                           : "vertical";
+
         output += indent + "<div id=\"splitter\" data-split=\"" + std::string(direction_attr) + "\"";
         output += " data-ratio=\"" + std::to_string(node->ratio) + "\">\n";
-        
+
         if (node->first)
         {
             GenerateRMLRecursive(node->first.get(), output, depth + 1);
         }
-        
+
         if (node->second)
         {
             GenerateRMLRecursive(node->second.get(), output, depth + 1);
         }
-        
+
         output += indent + "</div>\n";
     }
     else
@@ -176,13 +177,13 @@ LayoutEngineImpl::ApplyLayout()
 
     // Генерируем RML для раскладки
     std::string rml = GenerateRML();
-    
+
     // Загружаем в контекст (в реальной реализации это было бы более сложно)
     Rml::Log::Message(Rml::Log::LT_INFO, "Layout applied:\n%s", rml.c_str());
 }
 
-LayoutNode*
-LayoutEngineImpl::FindNodeByElement(LayoutNode* node, Rml::Element* element)
+LayoutNode *
+LayoutEngineImpl::FindNodeByElement(LayoutNode *node, Rml::Element *element)
 {
     if (!node || !element)
     {
@@ -198,15 +199,15 @@ LayoutEngineImpl::FindNodeByElement(LayoutNode* node, Rml::Element* element)
     // Рекурсивный поиск
     if (node->first)
     {
-        if (auto* found = FindNodeByElement(node->first.get(), element))
+        if (auto *found = FindNodeByElement(node->first.get(), element))
         {
             return found;
         }
     }
-    
+
     if (node->second)
     {
-        if (auto* found = FindNodeByElement(node->second.get(), element))
+        if (auto *found = FindNodeByElement(node->second.get(), element))
         {
             return found;
         }
@@ -216,7 +217,7 @@ LayoutEngineImpl::FindNodeByElement(LayoutNode* node, Rml::Element* element)
 }
 
 void
-LayoutEngineImpl::UpdatePanelSizes(LayoutNode* /*node*/, float /*width*/, float /*height*/)
+LayoutEngineImpl::UpdatePanelSizes(LayoutNode * /*node*/, float /*width*/, float /*height*/)
 {
     // TODO: рассчитать размеры панелей на основе ratio и контейнера
 }

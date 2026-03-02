@@ -14,8 +14,8 @@ namespace skif::rmlui
  */
 enum class SplitDirection
 {
-    Horizontal,  // Панели слева/справа
-    Vertical     // Панели сверху/снизу
+    Horizontal, // Панели слева/справа
+    Vertical    // Панели сверху/снизу
 };
 
 /**
@@ -47,37 +47,42 @@ struct SplitNode
     SplitNode() = default;
 
     /// Проверить, является ли узел листом (содержит редактор)
-    [[nodiscard]] bool IsLeaf() const noexcept
+    [[nodiscard]] bool
+    IsLeaf() const noexcept
     {
         return !first && !second;
     }
 
     /// Проверить, является ли узел разделителем
-    [[nodiscard]] bool IsSplit() const noexcept
+    [[nodiscard]] bool
+    IsSplit() const noexcept
     {
         return first && second;
     }
 
     /// Создать leaf-узел с редактором
-    [[nodiscard]] static std::unique_ptr<SplitNode> MakeLeaf(std::string_view editor_name)
+    [[nodiscard]] static std::unique_ptr<SplitNode>
+    MakeLeaf(std::string_view editor_name)
     {
-        auto node = std::make_unique<SplitNode>();
+        auto node         = std::make_unique<SplitNode>();
         node->editor_name = editor_name;
         return node;
     }
 
     /// Создать split-узел с двумя дочерними
-    [[nodiscard]] static std::unique_ptr<SplitNode> MakeSplit(
-        SplitDirection dir,
-        float ratio,
-        std::unique_ptr<SplitNode> first,
-        std::unique_ptr<SplitNode> second)
+    [[nodiscard]] static std::unique_ptr<SplitNode>
+    MakeSplit(
+            SplitDirection             dir,
+            float                      ratio,
+            std::unique_ptr<SplitNode> first,
+            std::unique_ptr<SplitNode> second
+    )
     {
-        auto node = std::make_unique<SplitNode>();
+        auto node       = std::make_unique<SplitNode>();
         node->direction = dir;
-        node->ratio = ratio;
-        node->first = std::move(first);
-        node->second = std::move(second);
+        node->ratio     = ratio;
+        node->first     = std::move(first);
+        node->second    = std::move(second);
         return node;
     }
 };

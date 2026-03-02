@@ -5,12 +5,12 @@
 // ============================================================================
 
 #if defined(_WIN32) || defined(_WIN64)
-    #define SKIF_PLATFORM_WINDOWS 1
+#define SKIF_PLATFORM_WINDOWS 1
 #elif defined(__linux__)
-    #define SKIF_PLATFORM_LINUX 1
+#define SKIF_PLATFORM_LINUX 1
 #elif defined(__APPLE__)
-    #include <TargetConditionals.h>
-    #define SKIF_PLATFORM_MACOS 1
+#include <TargetConditionals.h>
+#define SKIF_PLATFORM_MACOS 1
 #endif
 
 // ============================================================================
@@ -18,14 +18,14 @@
 // ============================================================================
 
 #if defined(_MSC_VER)
-    #define SKIF_COMPILER_MSVC 1
-    #define SKIF_COMPILER_VERSION _MSC_VER
+#define SKIF_COMPILER_MSVC    1
+#define SKIF_COMPILER_VERSION _MSC_VER
 #elif defined(__clang__)
-    #define SKIF_COMPILER_CLANG 1
-    #define SKIF_COMPILER_VERSION (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__)
+#define SKIF_COMPILER_CLANG   1
+#define SKIF_COMPILER_VERSION (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__)
 #elif defined(__GNUC__)
-    #define SKIF_COMPILER_GCC 1
-    #define SKIF_COMPILER_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#define SKIF_COMPILER_GCC     1
+#define SKIF_COMPILER_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #endif
 
 // ============================================================================
@@ -33,17 +33,17 @@
 // ============================================================================
 
 #if defined(SKIF_PLATFORM_WINDOWS)
-    #if defined(SKIF_PLUGIN_EXPORTS)
-        #define SKIF_PLUGIN_API __declspec(dllexport)
-    #else
-        #define SKIF_PLUGIN_API __declspec(dllimport)
-    #endif
+#if defined(SKIF_PLUGIN_EXPORTS)
+#define SKIF_PLUGIN_API __declspec(dllexport)
 #else
-    #if defined(SKIF_PLUGIN_EXPORTS)
-        #define SKIF_PLUGIN_API __attribute__((visibility("default")))
-    #else
-        #define SKIF_PLUGIN_API
-    #endif
+#define SKIF_PLUGIN_API __declspec(dllimport)
+#endif
+#else
+#if defined(SKIF_PLUGIN_EXPORTS)
+#define SKIF_PLUGIN_API __attribute__((visibility("default")))
+#else
+#define SKIF_PLUGIN_API
+#endif
 #endif
 
 #define SKIF_PLUGIN_EXPORT extern "C" SKIF_PLUGIN_API
@@ -57,9 +57,9 @@
 
 /// Mark a function as deprecated
 #if defined(SKIF_COMPILER_MSVC)
-    #define SKIF_DEPRECATED(msg) __declspec(deprecated(msg))
+#define SKIF_DEPRECATED(msg) __declspec(deprecated(msg))
 #else
-    #define SKIF_DEPRECATED(msg) [[deprecated(msg)]]
+#define SKIF_DEPRECATED(msg) [[deprecated(msg)]]
 #endif
 
 namespace skif::rmlui

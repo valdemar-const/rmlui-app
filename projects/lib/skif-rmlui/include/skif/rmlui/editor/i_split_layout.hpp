@@ -26,23 +26,24 @@ class IEditorRegistry;
  */
 class ISplitLayout
 {
-public:
+  public:
+
     virtual ~ISplitLayout() = default;
 
     /// Установить RmlUi контекст
-    virtual void SetContext(Rml::Context* context) = 0;
+    virtual void SetContext(Rml::Context *context) = 0;
 
     /// Установить EditorHost для создания/управления редакторами
-    virtual void SetEditorHost(IEditorHost* host) = 0;
+    virtual void SetEditorHost(IEditorHost *host) = 0;
 
     /// Установить EditorRegistry для генерации editor switcher
-    virtual void SetEditorRegistry(IEditorRegistry* registry) = 0;
+    virtual void SetEditorRegistry(IEditorRegistry *registry) = 0;
 
     /// Установить корневой узел дерева
     virtual void SetRoot(std::unique_ptr<SplitNode> root) = 0;
 
     /// Получить корневой узел
-    [[nodiscard]] virtual const SplitNode* GetRoot() const noexcept = 0;
+    [[nodiscard]] virtual const SplitNode *GetRoot() const noexcept = 0;
 
     /// Разделить панель (leaf-узел) на две
     /// @param panel Leaf-узел для разделения
@@ -52,22 +53,22 @@ public:
     /// @param split_to_first Если true — новая панель создаётся в first (слева/сверху),
     ///                       если false — в second (справа/снизу). По умолчанию false.
     virtual bool Split(
-        const SplitNode* panel,
-        SplitDirection direction,
-        std::string_view new_editor_name,
-        float ratio = 0.5f,
-        bool split_to_first = false
+            const SplitNode *panel,
+            SplitDirection   direction,
+            std::string_view new_editor_name,
+            float            ratio          = 0.5f,
+            bool             split_to_first = false
     ) = 0;
 
     /// Объединить split-узел (удалить разделение, оставить один из дочерних)
     /// @param split_node Split-узел для объединения
     /// @param keep_first true — оставить первый дочерний, false — второй
-    virtual bool Merge(const SplitNode* split_node, bool keep_first = true) = 0;
+    virtual bool Merge(const SplitNode *split_node, bool keep_first = true) = 0;
 
     /// Переключить тип редактора в панели (leaf-узле)
     /// @param panel Leaf-узел для переключения
     /// @param new_editor_name Имя нового типа редактора
-    virtual bool SwitchEditor(const SplitNode* panel, std::string_view new_editor_name) = 0;
+    virtual bool SwitchEditor(const SplitNode *panel, std::string_view new_editor_name) = 0;
 
     /// Рекурсивно обновить все активные редакторы в дереве
     virtual void Update(float delta_time) = 0;

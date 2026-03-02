@@ -14,27 +14,29 @@ namespace sample
  */
 class SampleEditor : public skif::rmlui::IEditor
 {
-public:
+  public:
+
     SampleEditor();
     ~SampleEditor() override;
 
-    [[nodiscard]] const skif::rmlui::EditorDescriptor& GetDescriptor() const noexcept override;
+    [[nodiscard]] const skif::rmlui::EditorDescriptor &GetDescriptor() const noexcept override;
 
-    void OnCreated(Rml::ElementDocument* document) override;
-    void OnCreatedInContainer(Rml::ElementDocument* document, Rml::Element* content_container) override;
+    void OnCreated(Rml::ElementDocument *document) override;
+    void OnCreatedInContainer(Rml::ElementDocument *document, Rml::Element *content_container) override;
     void OnActivate() override;
     void OnDeactivate() override;
     void OnUpdate(float delta_time) override;
     void OnDispose() noexcept override;
 
-private:
-    void BindEventsToContainer(Rml::Element* container);
+  private:
+
+    void BindEventsToContainer(Rml::Element *container);
 
     skif::rmlui::EditorDescriptor descriptor_;
-    Rml::ElementDocument* document_ = nullptr;
-    Rml::Element* content_container_ = nullptr;
-    int counter_ = 0;
-    
+    Rml::ElementDocument         *document_          = nullptr;
+    Rml::Element                 *content_container_ = nullptr;
+    int                           counter_           = 0;
+
     void UpdateCounterDisplay();
 };
 
@@ -43,14 +45,15 @@ private:
  */
 class SamplePanelPlugin : public skif::rmlui::IPlugin
 {
-public:
+  public:
+
     SamplePanelPlugin();
 
-    [[nodiscard]] std::string_view GetName() const noexcept override;
+    [[nodiscard]] std::string_view     GetName() const noexcept override;
     [[nodiscard]] skif::rmlui::Version GetVersion() const noexcept override;
-    [[nodiscard]] std::string_view GetDescription() const noexcept override;
+    [[nodiscard]] std::string_view     GetDescription() const noexcept override;
 
-    void OnLoad(skif::rmlui::IPluginRegistry& registry) override;
+    void OnLoad(skif::rmlui::IPluginRegistry &registry) override;
     void OnUnload() noexcept override;
 };
 

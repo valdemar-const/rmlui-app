@@ -15,8 +15,13 @@ struct Version
     int patch = 0;
 
     constexpr Version() noexcept = default;
-    constexpr Version(int major, int minor, int patch) noexcept 
-        : major(major), minor(minor), patch(patch) {}
+
+    constexpr Version(int major, int minor, int patch) noexcept
+        : major(major)
+        , minor(minor)
+        , patch(patch)
+    {
+    }
 };
 
 /**
@@ -25,7 +30,8 @@ struct Version
  */
 class IPlugin
 {
-public:
+  public:
+
     virtual ~IPlugin() = default;
 
     /// Получить имя плагина
@@ -35,13 +41,14 @@ public:
     [[nodiscard]] virtual Version GetVersion() const noexcept = 0;
 
     /// Получить описание плагина
-    [[nodiscard]] virtual std::string_view GetDescription() const noexcept 
-    { 
-        return {}; 
+    [[nodiscard]] virtual std::string_view
+    GetDescription() const noexcept
+    {
+        return {};
     }
 
     /// Вызывается при загрузке плагина
-    virtual void OnLoad(class IPluginRegistry& registry) = 0;
+    virtual void OnLoad(class IPluginRegistry &registry) = 0;
 
     /// Вызывается при выгрузке плагина
     virtual void OnUnload() noexcept = 0;

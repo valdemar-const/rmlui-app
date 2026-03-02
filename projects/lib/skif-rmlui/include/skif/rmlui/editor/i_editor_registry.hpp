@@ -17,7 +17,8 @@ namespace skif::rmlui
  */
 class IEditorRegistry
 {
-public:
+  public:
+
     virtual ~IEditorRegistry() = default;
 
     /// Зарегистрировать тип редактора (вызывается из плагина)
@@ -27,14 +28,14 @@ public:
     [[nodiscard]] virtual std::unique_ptr<IEditor> CreateEditor(std::string_view name) const = 0;
 
     /// Получить дескриптор по имени
-    [[nodiscard]] virtual const EditorDescriptor* GetDescriptor(std::string_view name) const = 0;
+    [[nodiscard]] virtual const EditorDescriptor *GetDescriptor(std::string_view name) const = 0;
 
     /// Получить все зарегистрированные дескрипторы
-    [[nodiscard]] virtual std::vector<const EditorDescriptor*> GetAllDescriptors() const = 0;
+    [[nodiscard]] virtual std::vector<const EditorDescriptor *> GetAllDescriptors() const = 0;
 
     /// Получить дескрипторы по категории
-    [[nodiscard]] virtual std::vector<const EditorDescriptor*> GetDescriptorsByCategory(
-        std::string_view category
+    [[nodiscard]] virtual std::vector<const EditorDescriptor *> GetDescriptorsByCategory(
+            std::string_view category
     ) const = 0;
 
     /// Получить список категорий

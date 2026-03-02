@@ -23,30 +23,31 @@ namespace skif::rmlui
  */
 class ILayoutEngine
 {
-public:
+  public:
+
     virtual ~ILayoutEngine() = default;
 
     /// Установить RmlUi контекст
-    virtual void SetContext(Rml::Context* context) = 0;
+    virtual void SetContext(Rml::Context *context) = 0;
 
     /// Создать корневую панель
     virtual void SetRoot(std::unique_ptr<LayoutNode> root) = 0;
 
     /// Получить корневой узел
-    [[nodiscard]] virtual const LayoutNode* GetRoot() const = 0;
+    [[nodiscard]] virtual const LayoutNode *GetRoot() const = 0;
 
     /// Разделить панель
     virtual bool SplitPanel(
-        Rml::Element* panel,
-        SplitDirection direction,
-        float ratio = 0.5f
+            Rml::Element  *panel,
+            SplitDirection direction,
+            float          ratio = 0.5f
     ) = 0;
 
     /// Объединить панели
-    virtual bool MergePanels(Rml::Element* first, Rml::Element* second) = 0;
+    virtual bool MergePanels(Rml::Element *first, Rml::Element *second) = 0;
 
     /// Начать перетаскивание сплиттера
-    virtual void BeginDrag(Rml::Element* splitter) = 0;
+    virtual void BeginDrag(Rml::Element *splitter) = 0;
 
     /// Обновить позицию перетаскивания
     virtual void UpdateDrag(float mouse_x, float mouse_y) = 0;

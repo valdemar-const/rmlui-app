@@ -8,18 +8,19 @@
 namespace skif::rmlui
 {
 
-ViewHostImpl::ViewHostImpl(IViewRegistry& registry)
+ViewHostImpl::ViewHostImpl(IViewRegistry &registry)
     : registry_(registry)
-{}
+{
+}
 
 void
-ViewHostImpl::SetContext(Rml::Context* context)
+ViewHostImpl::SetContext(Rml::Context *context)
 {
     context_ = context;
 }
 
 bool
-ViewHostImpl::AttachView(std::string_view view_name, Rml::Element* container)
+ViewHostImpl::AttachView(std::string_view view_name, Rml::Element *container)
 {
     if (!context_)
     {
@@ -36,7 +37,7 @@ ViewHostImpl::AttachView(std::string_view view_name, Rml::Element* container)
     }
 
     // Get descriptor from registry
-    const ViewDescriptor* descriptor = registry_.GetDescriptor(view_name);
+    const ViewDescriptor *descriptor = registry_.GetDescriptor(view_name);
     if (!descriptor)
     {
         Rml::Log::Message(Rml::Log::LT_ERROR, "ViewHost: View '%s' not found in registry.", view_name.data());
@@ -52,11 +53,10 @@ ViewHostImpl::AttachView(std::string_view view_name, Rml::Element* container)
     }
 
     // Load RML document
-    Rml::ElementDocument* document = context_->LoadDocument(descriptor->rml_path.c_str());
+    Rml::ElementDocument *document = context_->LoadDocument(descriptor->rml_path.c_str());
     if (!document)
     {
-        Rml::Log::Message(Rml::Log::LT_ERROR, "ViewHost: Failed to load RML '%s' for view '%s'.",
-            descriptor->rml_path.c_str(), view_name.data());
+        Rml::Log::Message(Rml::Log::LT_ERROR, "ViewHost: Failed to load RML '%s' for view '%s'.", descriptor->rml_path.c_str(), view_name.data());
         return false;
     }
 
@@ -73,7 +73,7 @@ ViewHostImpl::AttachView(std::string_view view_name, Rml::Element* container)
     // Store attached view
     AttachedView attached;
     attached.view      = std::move(view);
-    attached.document = document;
+    attached.document  = document;
     attached.container = container;
     attached.visible   = false; // Start hidden
 
@@ -83,7 +83,7 @@ ViewHostImpl::AttachView(std::string_view view_name, Rml::Element* container)
 }
 
 void
-ViewHostImpl::DetachView(Rml::Element* container)
+ViewHostImpl::DetachView(Rml::Element *container)
 {
     // Find view by container
     for (auto it = attached_views_.begin(); it != attached_views_.end(); ++it)
@@ -105,7 +105,7 @@ ViewHostImpl::DetachView(Rml::Element* container)
     }
 }
 
-IView*
+IView *
 ViewHostImpl::GetActiveView() const
 {
     auto it = attached_views_.find(active_view_name_);
@@ -120,7 +120,7 @@ void
 ViewHostImpl::ShowView(std::string_view name)
 {
     const std::string name_str(name);
-    auto it = attached_views_.find(name_str);
+    auto              it = attached_views_.find(name_str);
     if (it == attached_views_.end())
     {
         Rml::Log::Message(Rml::Log::LT_WARNING, "ViewHost: View '%s' not found.", name.data());
@@ -144,7 +144,7 @@ void
 ViewHostImpl::HideView(std::string_view name)
 {
     const std::string name_str(name);
-    auto it = attached_views_.find(name_str);
+    auto              it = attached_views_.find(name_str);
     if (it == attached_views_.end())
     {
         return;
@@ -169,7 +169,7 @@ ViewHostImpl::HideView(std::string_view name)
 void
 ViewHostImpl::Update(float delta_time)
 {
-    for (auto& [name, attached] : attached_views_)
+    for (auto &[name, attached] : attached_views_)
     {
         if (attached.visible)
         {

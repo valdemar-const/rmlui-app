@@ -28,20 +28,21 @@ namespace skif::rmlui
  */
 class EditorHostImpl final : public IEditorHost
 {
-public:
-    explicit EditorHostImpl(IEditorRegistry& registry);
+  public:
+
+    explicit EditorHostImpl(IEditorRegistry &registry);
     ~EditorHostImpl() override;
 
     // IEditorHost
-    void SetContext(Rml::Context* context) override;
-    [[nodiscard]] bool CreateEditor(std::string_view editor_name, std::string_view instance_id) override;
-    void DestroyEditor(std::string_view instance_id) override;
-    void ActivateEditor(std::string_view instance_id) override;
-    void DeactivateEditor(std::string_view instance_id) override;
-    [[nodiscard]] IEditor* GetEditor(std::string_view instance_id) const override;
-    void UpdateEditor(std::string_view instance_id, float delta_time) override;
-    void UpdateAll(float delta_time) override;
-    void DestroyAll() override;
+    void                   SetContext(Rml::Context *context) override;
+    [[nodiscard]] bool     CreateEditor(std::string_view editor_name, std::string_view instance_id) override;
+    void                   DestroyEditor(std::string_view instance_id) override;
+    void                   ActivateEditor(std::string_view instance_id) override;
+    void                   DeactivateEditor(std::string_view instance_id) override;
+    [[nodiscard]] IEditor *GetEditor(std::string_view instance_id) const override;
+    void                   UpdateEditor(std::string_view instance_id, float delta_time) override;
+    void                   UpdateAll(float delta_time) override;
+    void                   DestroyAll() override;
 
     /// Создать редактор в embedded режиме — контент вставляется в panel-content элемент
     /// @param editor_name Имя зарегистрированного типа редактора
@@ -50,10 +51,10 @@ public:
     /// @param layout_document Layout документ (для OnCreated)
     /// @return true если редактор успешно создан
     [[nodiscard]] bool CreateEditorEmbedded(
-        std::string_view editor_name,
-        std::string_view instance_id,
-        Rml::Element* content_element,
-        Rml::ElementDocument* layout_document
+            std::string_view      editor_name,
+            std::string_view      instance_id,
+            Rml::Element         *content_element,
+            Rml::ElementDocument *layout_document
     );
 
     /// Переименовать instance_id существующего editor
@@ -67,32 +68,33 @@ public:
     /// @param layout_document Новый layout документ
     /// @return true если editor успешно перепривязан
     [[nodiscard]] bool ReattachEditorEmbedded(
-        std::string_view instance_id,
-        Rml::Element* content_element,
-        Rml::ElementDocument* layout_document
+            std::string_view      instance_id,
+            Rml::Element         *content_element,
+            Rml::ElementDocument *layout_document
     );
 
-private:
+  private:
+
     /// Прочитать файл и вернуть содержимое
-    [[nodiscard]] std::string ReadFile(const std::string& path) const;
+    [[nodiscard]] std::string ReadFile(const std::string &path) const;
 
     /// Извлечь содержимое <body>...</body> из RML строки
-    [[nodiscard]] std::string ExtractBodyContent(const std::string& rml_content) const;
+    [[nodiscard]] std::string ExtractBodyContent(const std::string &rml_content) const;
 
     /// Извлечь содержимое <style>...</style> из RML строки
-    [[nodiscard]] std::string ExtractStyleContent(const std::string& rml_content) const;
+    [[nodiscard]] std::string ExtractStyleContent(const std::string &rml_content) const;
 
     struct EditorInstance
     {
-        std::unique_ptr<IEditor>  editor;
-        Rml::ElementDocument*     document = nullptr;
-        bool                      active   = false;
-        bool                      embedded = false;  // true если создан через CreateEditorEmbedded
+        std::unique_ptr<IEditor> editor;
+        Rml::ElementDocument    *document = nullptr;
+        bool                     active   = false;
+        bool                     embedded = false; // true если создан через CreateEditorEmbedded
     };
 
-    IEditorRegistry&                                    registry_;
-    Rml::Context*                                       context_ = nullptr;
-    std::unordered_map<std::string, EditorInstance>     instances_;
+    IEditorRegistry                                &registry_;
+    Rml::Context                                   *context_ = nullptr;
+    std::unordered_map<std::string, EditorInstance> instances_;
 };
 
 } // namespace skif::rmlui

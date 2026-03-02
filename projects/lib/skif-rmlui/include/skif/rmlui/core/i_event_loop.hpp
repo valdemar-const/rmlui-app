@@ -14,7 +14,8 @@ namespace skif::rmlui
  */
 class IEventLoop
 {
-public:
+  public:
+
     using UpdateCallback   = std::function<void(float delta_time)>;
     using RenderCallback   = std::function<void()>;
     using ExitCallback     = std::function<void()>;

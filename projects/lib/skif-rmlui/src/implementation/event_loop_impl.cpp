@@ -34,8 +34,8 @@ EventLoopImpl::Run()
 
         // Вычисление delta time
         const auto current_time = std::chrono::steady_clock::now();
-        const auto elapsed       = std::chrono::duration<float>(current_time - last_time_);
-        last_time_               = current_time;
+        const auto elapsed      = std::chrono::duration<float>(current_time - last_time_);
+        last_time_              = current_time;
 
         delta_time_  = elapsed.count();
         total_time_ += delta_time_;

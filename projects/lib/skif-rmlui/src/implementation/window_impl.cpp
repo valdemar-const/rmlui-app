@@ -7,7 +7,7 @@
 namespace skif::rmlui
 {
 
-WindowImpl::WindowImpl(const WindowConfig& config)
+WindowImpl::WindowImpl(const WindowConfig &config)
 {
     // Настройка GLFW
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, config.context_major);
@@ -17,8 +17,8 @@ WindowImpl::WindowImpl(const WindowConfig& config)
     glfwWindowHint(GLFW_RESIZABLE, config.resizable ? GLFW_TRUE : GLFW_FALSE);
 
     // Создание окна
-    GLFWmonitor* monitor = config.fullscreen ? glfwGetPrimaryMonitor() : nullptr;
-    window_               = glfwCreateWindow(config.width, config.height, config.title.c_str(), monitor, nullptr);
+    GLFWmonitor *monitor = config.fullscreen ? glfwGetPrimaryMonitor() : nullptr;
+    window_              = glfwCreateWindow(config.width, config.height, config.title.c_str(), monitor, nullptr);
 
     if (!window_)
     {
@@ -38,7 +38,7 @@ WindowImpl::~WindowImpl()
     }
 }
 
-void*
+void *
 WindowImpl::GetNativeHandle() noexcept
 {
     return window_;
@@ -93,7 +93,7 @@ WindowImpl::SwapBuffers() noexcept
     glfwSwapBuffers(window_);
 }
 
-GLFWwindow*
+GLFWwindow *
 WindowImpl::GetGlfwWindow() const noexcept
 {
     return window_;

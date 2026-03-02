@@ -22,20 +22,21 @@ namespace skif::rmlui
  */
 class IViewHost
 {
-public:
+  public:
+
     virtual ~IViewHost() = default;
 
     /// Установить RmlUi контекст
-    virtual void SetContext(Rml::Context* context) = 0;
+    virtual void SetContext(Rml::Context *context) = 0;
 
     /// Присоединить представление к контейнеру
-    virtual bool AttachView(std::string_view view_name, Rml::Element* container) = 0;
+    virtual bool AttachView(std::string_view view_name, Rml::Element *container) = 0;
 
     /// Отсоединить представление от контейнера
-    virtual void DetachView(Rml::Element* container) = 0;
+    virtual void DetachView(Rml::Element *container) = 0;
 
     /// Получить активное представление
-    [[nodiscard]] virtual IView* GetActiveView() const = 0;
+    [[nodiscard]] virtual IView *GetActiveView() const = 0;
 
     /// Показать представление по имени
     virtual void ShowView(std::string_view name) = 0;

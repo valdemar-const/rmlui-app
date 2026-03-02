@@ -4,7 +4,11 @@
 
 // Forward declarations
 struct GladGLContext;
-namespace Rml { class Context; }
+
+namespace Rml
+{
+class Context;
+} // namespace Rml
 
 namespace skif::rmlui
 {
@@ -15,9 +19,9 @@ class InputManagerImpl;
 /// Агрегирует все указатели, нужные в GLFW callbacks.
 struct WindowContext
 {
-    GladGLContext*     gl            = nullptr;
-    Rml::Context*      rml_context   = nullptr;
-    InputManagerImpl*  input_manager = nullptr;
+    GladGLContext    *gl            = nullptr;
+    Rml::Context     *rml_context   = nullptr;
+    InputManagerImpl *input_manager = nullptr;
 };
 
 } // namespace skif::rmlui

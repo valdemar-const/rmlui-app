@@ -31,19 +31,19 @@ SplitLayoutImpl::~SplitLayoutImpl()
 }
 
 void
-SplitLayoutImpl::SetContext(Rml::Context* context)
+SplitLayoutImpl::SetContext(Rml::Context *context)
 {
     context_ = context;
 }
 
 void
-SplitLayoutImpl::SetEditorHost(IEditorHost* host)
+SplitLayoutImpl::SetEditorHost(IEditorHost *host)
 {
     editor_host_ = host;
 }
 
 void
-SplitLayoutImpl::SetEditorRegistry(IEditorRegistry* registry)
+SplitLayoutImpl::SetEditorRegistry(IEditorRegistry *registry)
 {
     editor_registry_ = registry;
 }
@@ -60,7 +60,7 @@ SplitLayoutImpl::SetRoot(std::unique_ptr<SplitNode> root)
     root_ = std::move(root);
 }
 
-const SplitNode*
+const SplitNode *
 SplitLayoutImpl::GetRoot() const noexcept
 {
     return root_.get();
@@ -68,11 +68,12 @@ SplitLayoutImpl::GetRoot() const noexcept
 
 bool
 SplitLayoutImpl::Split(
-    const SplitNode* panel,
-    SplitDirection direction,
-    std::string_view new_editor_name,
-    float ratio,
-    bool split_to_first)
+        const SplitNode *panel,
+        SplitDirection   direction,
+        std::string_view new_editor_name,
+        float            ratio,
+        bool             split_to_first
+)
 {
     if (!panel || !root_ || !panel->IsLeaf())
     {
@@ -92,17 +93,17 @@ SplitLayoutImpl::Split(
 
     result.node->editor_name.clear();
     result.node->direction = direction;
-    result.node->ratio = ratio;
+    result.node->ratio     = ratio;
 
     if (split_to_first)
     {
         // Новая панель создаётся слева (или сверху для вертикального split)
-        result.node->first = SplitNode::MakeLeaf(new_editor_name_str);
+        result.node->first  = SplitNode::MakeLeaf(new_editor_name_str);
         result.node->second = SplitNode::MakeLeaf(old_editor_name);
 
         // Переименовываем существующий editor instance: old_id → new_id (для second-узла)
-        std::string new_second_id = MakeInstanceId(result.node->second.get());
-        auto* editor_host_impl = dynamic_cast<EditorHostImpl*>(editor_host_);
+        std::string new_second_id    = MakeInstanceId(result.node->second.get());
+        auto       *editor_host_impl = dynamic_cast<EditorHostImpl *>(editor_host_);
         if (editor_host_impl)
         {
             editor_host_impl->RenameInstance(old_instance_id, new_second_id);
@@ -111,12 +112,12 @@ SplitLayoutImpl::Split(
     else
     {
         // Новая панель создаётся справа (или снизу для вертикального split) — по умолчанию
-        result.node->first = SplitNode::MakeLeaf(old_editor_name);
+        result.node->first  = SplitNode::MakeLeaf(old_editor_name);
         result.node->second = SplitNode::MakeLeaf(new_editor_name_str);
 
         // Переименовываем существующий editor instance: old_id → new_id (для first-узла)
-        std::string new_first_id = MakeInstanceId(result.node->first.get());
-        auto* editor_host_impl = dynamic_cast<EditorHostImpl*>(editor_host_);
+        std::string new_first_id     = MakeInstanceId(result.node->first.get());
+        auto       *editor_host_impl = dynamic_cast<EditorHostImpl *>(editor_host_);
         if (editor_host_impl)
         {
             editor_host_impl->RenameInstance(old_instance_id, new_first_id);
@@ -129,7 +130,7 @@ SplitLayoutImpl::Split(
 }
 
 bool
-SplitLayoutImpl::Merge(const SplitNode* split_node, bool keep_first)
+SplitLayoutImpl::Merge(const SplitNode *split_node, bool keep_first)
 {
     if (!split_node || !root_ || split_node->IsLeaf())
     {
@@ -142,8 +143,8 @@ SplitLayoutImpl::Merge(const SplitNode* split_node, bool keep_first)
         return false;
     }
 
-    SplitNode* keep_node = keep_first ? result.node->first.get() : result.node->second.get();
-    SplitNode* remove_node = keep_first ? result.node->second.get() : result.node->first.get();
+    SplitNode *keep_node   = keep_first ? result.node->first.get() : result.node->second.get();
+    SplitNode *remove_node = keep_first ? result.node->second.get() : result.node->first.get();
 
     if (editor_host_)
     {
@@ -159,11 +160,11 @@ SplitLayoutImpl::Merge(const SplitNode* split_node, bool keep_first)
     else
     {
         result.node->direction = keep_node->direction;
-        result.node->ratio = keep_node->ratio;
-        auto first = std::move(keep_node->first);
-        auto second = std::move(keep_node->second);
-        result.node->first = std::move(first);
-        result.node->second = std::move(second);
+        result.node->ratio     = keep_node->ratio;
+        auto first             = std::move(keep_node->first);
+        auto second            = std::move(keep_node->second);
+        result.node->first     = std::move(first);
+        result.node->second    = std::move(second);
         result.node->editor_name.clear();
     }
 
@@ -172,7 +173,7 @@ SplitLayoutImpl::Merge(const SplitNode* split_node, bool keep_first)
 }
 
 bool
-SplitLayoutImpl::SwitchEditor(const SplitNode* panel, std::string_view new_editor_name)
+SplitLayoutImpl::SwitchEditor(const SplitNode *panel, std::string_view new_editor_name)
 {
     if (!panel || !root_ || !panel->IsLeaf() || !editor_host_)
     {
@@ -211,14 +212,14 @@ SplitLayoutImpl::Update(float delta_time)
     UpdateRecursive(root_.get(), delta_time);
 
     // Обновляем status bar для всех контроллеров
-    for (auto& controller : panel_controllers_)
+    for (auto &controller : panel_controllers_)
     {
         controller->UpdateStatusBar();
     }
 }
 
 void
-SplitLayoutImpl::UpdateRecursive(const SplitNode* node, float delta_time)
+SplitLayoutImpl::UpdateRecursive(const SplitNode *node, float delta_time)
 {
     if (!node)
     {
@@ -254,7 +255,7 @@ SplitLayoutImpl::Initialize()
 }
 
 void
-SplitLayoutImpl::InitializeRecursive(const SplitNode* node)
+SplitLayoutImpl::InitializeRecursive(const SplitNode *node)
 {
     // Этот метод больше не используется напрямую —
     // editor instances создаются в LoadEditorContentRecursive
@@ -275,7 +276,7 @@ SplitLayoutImpl::InitializeRecursive(const SplitNode* node)
 }
 
 void
-SplitLayoutImpl::DestroyRecursive(const SplitNode* node)
+SplitLayoutImpl::DestroyRecursive(const SplitNode *node)
 {
     if (!node)
     {
@@ -349,7 +350,7 @@ void
 SplitLayoutImpl::CloseLayoutDocument()
 {
     panel_controllers_.clear();
-    dragging_divider_ = nullptr;
+    dragging_divider_    = nullptr;
     dragging_split_node_ = nullptr;
 
     if (layout_document_)
@@ -384,7 +385,7 @@ SplitLayoutImpl::GenerateRML() const
     output += "    <link type=\"text/rcss\" href=\"assets/ui/panel_container.rcss\"/>\n";
 
     // Подключаем RCSS файлы Editor'ов
-    for (const auto& rcss : rcss_paths)
+    for (const auto &rcss : rcss_paths)
     {
         output += "    <link type=\"text/rcss\" href=\"" + rcss + "\"/>\n";
     }
@@ -413,7 +414,7 @@ SplitLayoutImpl::GenerateRML() const
 }
 
 void
-SplitLayoutImpl::GenerateRMLRecursive(const SplitNode* node, std::string& output, int depth) const
+SplitLayoutImpl::GenerateRMLRecursive(const SplitNode *node, std::string &output, int depth) const
 {
     if (!node)
     {
@@ -424,16 +425,19 @@ SplitLayoutImpl::GenerateRMLRecursive(const SplitNode* node, std::string& output
 
     if (node->IsSplit())
     {
-        const char* dir_attr = (node->direction == SplitDirection::Horizontal)
-            ? "horizontal" : "vertical";
+        const char *dir_attr = (node->direction == SplitDirection::Horizontal)
+                                     ? "horizontal"
+                                     : "vertical";
 
-        const char* flex_dir = (node->direction == SplitDirection::Horizontal)
-            ? "row" : "column";
+        const char *flex_dir = (node->direction == SplitDirection::Horizontal)
+                                     ? "row"
+                                     : "column";
 
-        const char* size_prop = (node->direction == SplitDirection::Horizontal)
-            ? "width" : "height";
+        const char *size_prop = (node->direction == SplitDirection::Horizontal)
+                                      ? "width"
+                                      : "height";
 
-        int first_pct = static_cast<int>(node->ratio * 100.0f);
+        int first_pct  = static_cast<int>(node->ratio * 100.0f);
         int second_pct = 100 - first_pct;
 
         // Split container с data-node-id для поиска при divider drag
@@ -476,7 +480,7 @@ SplitLayoutImpl::GenerateRMLRecursive(const SplitNode* node, std::string& output
 }
 
 void
-SplitLayoutImpl::GeneratePanelContainerRML(const SplitNode* node, std::string& output, int depth) const
+SplitLayoutImpl::GeneratePanelContainerRML(const SplitNode *node, std::string &output, int depth) const
 {
     if (!node || node->editor_name.empty())
     {
@@ -487,7 +491,7 @@ SplitLayoutImpl::GeneratePanelContainerRML(const SplitNode* node, std::string& o
     std::string instance_id = MakeInstanceId(node);
 
     // Получаем дескриптор для display_name и menu
-    const EditorDescriptor* descriptor = nullptr;
+    const EditorDescriptor *descriptor = nullptr;
     if (editor_registry_)
     {
         descriptor = editor_registry_->GetDescriptor(node->editor_name);
@@ -509,7 +513,7 @@ SplitLayoutImpl::GeneratePanelContainerRML(const SplitNode* node, std::string& o
     if (descriptor && !descriptor->menu_entries.empty())
     {
         output += indent + "        <div class=\"panel-menu\">\n";
-        for (const auto& entry : descriptor->menu_entries)
+        for (const auto &entry : descriptor->menu_entries)
         {
             output += indent + "            <button class=\"menu-item\" data-action=\"" + entry.action_id + "\">";
             output += entry.label;
@@ -544,7 +548,7 @@ SplitLayoutImpl::GeneratePanelContainerRML(const SplitNode* node, std::string& o
 }
 
 void
-SplitLayoutImpl::GenerateEditorSwitcherRML(const SplitNode* node, std::string& output, int depth) const
+SplitLayoutImpl::GenerateEditorSwitcherRML(const SplitNode *node, std::string &output, int depth) const
 {
     std::string indent(depth * 4, ' ');
     std::string instance_id = MakeInstanceId(node);
@@ -554,7 +558,7 @@ SplitLayoutImpl::GenerateEditorSwitcherRML(const SplitNode* node, std::string& o
     if (editor_registry_)
     {
         auto descriptors = editor_registry_->GetAllDescriptors();
-        for (const auto* desc : descriptors)
+        for (const auto *desc : descriptors)
         {
             output += indent + "    <option value=\"" + desc->name + "\"";
             if (desc->name == node->editor_name)
@@ -578,7 +582,7 @@ SplitLayoutImpl::GenerateEditorSwitcherRML(const SplitNode* node, std::string& o
 // ============================================================================
 
 void
-SplitLayoutImpl::LoadEditorContentRecursive(const SplitNode* node)
+SplitLayoutImpl::LoadEditorContentRecursive(const SplitNode *node)
 {
     if (!node || !layout_document_ || !editor_host_)
     {
@@ -589,47 +593,43 @@ SplitLayoutImpl::LoadEditorContentRecursive(const SplitNode* node)
     {
         if (node->editor_name.empty())
         {
-            Rml::Log::Message(Rml::Log::LT_WARNING,
-                "SplitLayout: Skipping leaf with empty editor_name (node=%p).",
-                static_cast<const void*>(node));
+            Rml::Log::Message(Rml::Log::LT_WARNING, "SplitLayout: Skipping leaf with empty editor_name (node=%p).", static_cast<const void *>(node));
             return;
         }
 
         std::string instance_id = MakeInstanceId(node);
 
-        Rml::Log::Message(Rml::Log::LT_INFO,
-            "SplitLayout: Loading editor content for '%s' (instance '%s').",
-            node->editor_name.c_str(), instance_id.c_str());
+        Rml::Log::Message(Rml::Log::LT_INFO, "SplitLayout: Loading editor content for '%s' (instance '%s').", node->editor_name.c_str(), instance_id.c_str());
 
         // Находим panel-content элемент по data-instance
-        Rml::Element* content_element = layout_document_->QuerySelector(
-            ".panel-content[data-instance=\"" + instance_id + "\"]"
+        Rml::Element *content_element = layout_document_->QuerySelector(
+                ".panel-content[data-instance=\"" + instance_id + "\"]"
         );
 
         if (!content_element)
         {
-            Rml::Log::Message(Rml::Log::LT_ERROR,
-                "SplitLayout: panel-content not found for instance '%s'.",
-                instance_id.c_str());
+            Rml::Log::Message(Rml::Log::LT_ERROR, "SplitLayout: panel-content not found for instance '%s'.", instance_id.c_str());
             return;
         }
 
         // Проверяем, существует ли уже editor instance
-        auto* editor_host_impl = dynamic_cast<EditorHostImpl*>(editor_host_);
+        auto *editor_host_impl = dynamic_cast<EditorHostImpl *>(editor_host_);
         if (editor_host_impl)
         {
-            IEditor* existing = editor_host_->GetEditor(instance_id);
+            IEditor *existing = editor_host_->GetEditor(instance_id);
             if (existing)
             {
                 // Editor уже существует — перепривязываем к новому layout документу
                 (void)editor_host_impl->ReattachEditorEmbedded(
-                    instance_id, content_element, layout_document_);
+                        instance_id, content_element, layout_document_
+                );
             }
             else
             {
                 // Новый editor — создаём
                 if (editor_host_impl->CreateEditorEmbedded(
-                        node->editor_name, instance_id, content_element, layout_document_))
+                            node->editor_name, instance_id, content_element, layout_document_
+                    ))
                 {
                     editor_host_impl->ActivateEditor(instance_id);
                 }
@@ -656,7 +656,7 @@ SplitLayoutImpl::LoadEditorContentRecursive(const SplitNode* node)
 // ============================================================================
 
 void
-SplitLayoutImpl::SetupPanelControllersRecursive(const SplitNode* node)
+SplitLayoutImpl::SetupPanelControllersRecursive(const SplitNode *node)
 {
     if (!node || !layout_document_)
     {
@@ -673,21 +673,18 @@ SplitLayoutImpl::SetupPanelControllersRecursive(const SplitNode* node)
         std::string instance_id = MakeInstanceId(node);
 
         // Находим panel-container элемент
-        Rml::Element* container = layout_document_->QuerySelector(
-            ".panel-container[data-instance=\"" + instance_id + "\"]"
+        Rml::Element *container = layout_document_->QuerySelector(
+                ".panel-container[data-instance=\"" + instance_id + "\"]"
         );
 
         if (!container)
         {
-            Rml::Log::Message(Rml::Log::LT_WARNING,
-                "SplitLayout: panel-container not found for instance '%s'.",
-                instance_id.c_str());
+            Rml::Log::Message(Rml::Log::LT_WARNING, "SplitLayout: panel-container not found for instance '%s'.", instance_id.c_str());
             return;
         }
 
         auto controller = std::make_unique<PanelContainerController>(
-            *this, *editor_host_, *editor_registry_,
-            node, container, instance_id
+                *this, *editor_host_, *editor_registry_, node, container, instance_id
         );
         controller->BindEvents();
         panel_controllers_.push_back(std::move(controller));
@@ -715,25 +712,28 @@ SplitLayoutImpl::SetupDividerHandlers()
     layout_document_->QuerySelectorAll(dividers, ".split-divider");
     for (int i = 0; i < static_cast<int>(dividers.size()); ++i)
     {
-        Rml::Element* divider = dividers[i];
+        Rml::Element *divider = dividers[i];
 
-        BindEvent(divider, "mousedown",
-            [this, divider](Rml::Event& event) { OnDividerMouseDown(event, divider); }
-        );
+        BindEvent(divider, "mousedown", [this, divider](Rml::Event &event)
+                  {
+                      OnDividerMouseDown(event, divider);
+                  });
     }
 
     // Document-level mousemove и mouseup для drag
-    BindEvent(layout_document_, "mousemove",
-        [this](Rml::Event& event) { OnDocumentMouseMove(event); }
-    );
+    BindEvent(layout_document_, "mousemove", [this](Rml::Event &event)
+              {
+                  OnDocumentMouseMove(event);
+              });
 
-    BindEvent(layout_document_, "mouseup",
-        [this](Rml::Event& event) { OnDocumentMouseUp(event); }
-    );
+    BindEvent(layout_document_, "mouseup", [this](Rml::Event &event)
+              {
+                  OnDocumentMouseUp(event);
+              });
 }
 
 void
-SplitLayoutImpl::OnDividerMouseDown(Rml::Event& event, Rml::Element* divider)
+SplitLayoutImpl::OnDividerMouseDown(Rml::Event &event, Rml::Element *divider)
 {
     if (!divider)
     {
@@ -743,8 +743,8 @@ SplitLayoutImpl::OnDividerMouseDown(Rml::Event& event, Rml::Element* divider)
     dragging_divider_ = divider;
 
     // Определяем направление
-    Rml::String direction = divider->GetAttribute<Rml::String>("data-direction", "horizontal");
-    bool is_horizontal = (direction == "horizontal");
+    Rml::String direction     = divider->GetAttribute<Rml::String>("data-direction", "horizontal");
+    bool        is_horizontal = (direction == "horizontal");
 
     // Получаем начальную позицию мыши
     if (is_horizontal)
@@ -763,7 +763,7 @@ SplitLayoutImpl::OnDividerMouseDown(Rml::Event& event, Rml::Element* divider)
         drag_start_ratio_ = dragging_split_node_->ratio;
 
         // Получаем размер контейнера для расчёта нового ratio
-        Rml::Element* parent = divider->GetParentNode();
+        Rml::Element *parent = divider->GetParentNode();
         if (parent)
         {
             auto box = parent->GetBox();
@@ -778,20 +778,19 @@ SplitLayoutImpl::OnDividerMouseDown(Rml::Event& event, Rml::Element* divider)
         }
     }
 
-    Rml::Log::Message(Rml::Log::LT_INFO,
-        "SplitLayout: Divider drag started (ratio=%.2f).", drag_start_ratio_);
+    Rml::Log::Message(Rml::Log::LT_INFO, "SplitLayout: Divider drag started (ratio=%.2f).", drag_start_ratio_);
 }
 
 void
-SplitLayoutImpl::OnDocumentMouseMove(Rml::Event& event)
+SplitLayoutImpl::OnDocumentMouseMove(Rml::Event &event)
 {
     if (!dragging_divider_ || !dragging_split_node_)
     {
         return;
     }
 
-    Rml::String direction = dragging_divider_->GetAttribute<Rml::String>("data-direction", "horizontal");
-    bool is_horizontal = (direction == "horizontal");
+    Rml::String direction     = dragging_divider_->GetAttribute<Rml::String>("data-direction", "horizontal");
+    bool        is_horizontal = (direction == "horizontal");
 
     float current_mouse;
     if (is_horizontal)
@@ -808,37 +807,47 @@ SplitLayoutImpl::OnDocumentMouseMove(Rml::Event& event)
         return;
     }
 
-    float delta = current_mouse - drag_start_mouse_;
+    float delta       = current_mouse - drag_start_mouse_;
     float delta_ratio = delta / drag_container_size_;
-    float new_ratio = drag_start_ratio_ + delta_ratio;
+    float new_ratio   = drag_start_ratio_ + delta_ratio;
 
     // Clamp ratio
     float min_ratio = dragging_split_node_->min_size / drag_container_size_;
     float max_ratio = 1.0f - min_ratio;
-    if (new_ratio < min_ratio) new_ratio = min_ratio;
-    if (new_ratio > max_ratio) new_ratio = max_ratio;
+    if (new_ratio < min_ratio)
+    {
+        new_ratio = min_ratio;
+    }
+    if (new_ratio > max_ratio)
+    {
+        new_ratio = max_ratio;
+    }
 
     dragging_split_node_->ratio = new_ratio;
 
     // Обновляем CSS размеры панелей
-    Rml::Element* parent = dragging_divider_->GetParentNode();
+    Rml::Element *parent = dragging_divider_->GetParentNode();
     if (parent)
     {
-        int first_pct = static_cast<int>(new_ratio * 100.0f);
+        int first_pct  = static_cast<int>(new_ratio * 100.0f);
         int second_pct = 100 - first_pct;
 
-        const char* size_prop = is_horizontal ? "width" : "height";
+        const char *size_prop = is_horizontal ? "width" : "height";
 
         // Находим split-first и split-second среди прямых потомков
-        Rml::Element* first_panel = nullptr;
-        Rml::Element* second_panel = nullptr;
+        Rml::Element *first_panel  = nullptr;
+        Rml::Element *second_panel = nullptr;
         for (int ci = 0; ci < parent->GetNumChildren(); ++ci)
         {
-            Rml::Element* child = parent->GetChild(ci);
+            Rml::Element *child = parent->GetChild(ci);
             if (child->IsClassSet("split-first"))
+            {
                 first_panel = child;
+            }
             else if (child->IsClassSet("split-second"))
+            {
                 second_panel = child;
+            }
         }
 
         if (first_panel)
@@ -853,21 +862,19 @@ SplitLayoutImpl::OnDocumentMouseMove(Rml::Event& event)
 }
 
 void
-SplitLayoutImpl::OnDocumentMouseUp(Rml::Event& /*event*/)
+SplitLayoutImpl::OnDocumentMouseUp(Rml::Event & /*event*/)
 {
     if (dragging_divider_)
     {
-        Rml::Log::Message(Rml::Log::LT_INFO,
-            "SplitLayout: Divider drag ended (ratio=%.2f).",
-            dragging_split_node_ ? dragging_split_node_->ratio : 0.0f);
+        Rml::Log::Message(Rml::Log::LT_INFO, "SplitLayout: Divider drag ended (ratio=%.2f).", dragging_split_node_ ? dragging_split_node_->ratio : 0.0f);
     }
 
-    dragging_divider_ = nullptr;
+    dragging_divider_    = nullptr;
     dragging_split_node_ = nullptr;
 }
 
-SplitNode*
-SplitLayoutImpl::FindSplitNodeForDivider(Rml::Element* divider)
+SplitNode *
+SplitLayoutImpl::FindSplitNodeForDivider(Rml::Element *divider)
 {
     if (!divider || !root_)
     {
@@ -899,8 +906,8 @@ SplitLayoutImpl::FindSplitNodeForDivider(Rml::Element* divider)
 // Node search helpers
 // ============================================================================
 
-SplitNode*
-SplitLayoutImpl::FindSplitNodeByAddress(SplitNode* node, uintptr_t address)
+SplitNode *
+SplitLayoutImpl::FindSplitNodeByAddress(SplitNode *node, uintptr_t address)
 {
     if (!node)
     {
@@ -914,20 +921,26 @@ SplitLayoutImpl::FindSplitNodeByAddress(SplitNode* node, uintptr_t address)
 
     if (node->first)
     {
-        auto* result = FindSplitNodeByAddress(node->first.get(), address);
-        if (result) return result;
+        auto *result = FindSplitNodeByAddress(node->first.get(), address);
+        if (result)
+        {
+            return result;
+        }
     }
 
     if (node->second)
     {
-        auto* result = FindSplitNodeByAddress(node->second.get(), address);
-        if (result) return result;
+        auto *result = FindSplitNodeByAddress(node->second.get(), address);
+        if (result)
+        {
+            return result;
+        }
     }
 
     return nullptr;
 }
 
-SplitNode*
+SplitNode *
 SplitLayoutImpl::FindNodeByInstanceId(std::string_view instance_id)
 {
     if (!root_)
@@ -937,8 +950,8 @@ SplitLayoutImpl::FindNodeByInstanceId(std::string_view instance_id)
     return FindNodeByInstanceIdRecursive(root_.get(), instance_id);
 }
 
-SplitNode*
-SplitLayoutImpl::FindNodeByInstanceIdRecursive(SplitNode* node, std::string_view instance_id)
+SplitNode *
+SplitLayoutImpl::FindNodeByInstanceIdRecursive(SplitNode *node, std::string_view instance_id)
 {
     if (!node)
     {
@@ -954,10 +967,16 @@ SplitLayoutImpl::FindNodeByInstanceIdRecursive(SplitNode* node, std::string_view
     }
     else
     {
-        auto* result = FindNodeByInstanceIdRecursive(node->first.get(), instance_id);
-        if (result) return result;
+        auto *result = FindNodeByInstanceIdRecursive(node->first.get(), instance_id);
+        if (result)
+        {
+            return result;
+        }
         result = FindNodeByInstanceIdRecursive(node->second.get(), instance_id);
-        if (result) return result;
+        if (result)
+        {
+            return result;
+        }
     }
 
     return nullptr;
@@ -968,7 +987,7 @@ SplitLayoutImpl::FindNodeByInstanceIdRecursive(SplitNode* node, std::string_view
 // ============================================================================
 
 SplitLayoutImpl::FindResult
-SplitLayoutImpl::FindNode(SplitNode* root, const SplitNode* target)
+SplitLayoutImpl::FindNode(SplitNode *root, const SplitNode *target)
 {
     if (!root || !target)
     {
@@ -985,10 +1004,11 @@ SplitLayoutImpl::FindNode(SplitNode* root, const SplitNode* target)
 
 SplitLayoutImpl::FindResult
 SplitLayoutImpl::FindNodeRecursive(
-    SplitNode* current,
-    SplitNode* parent,
-    bool is_first,
-    const SplitNode* target)
+        SplitNode       *current,
+        SplitNode       *parent,
+        bool             is_first,
+        const SplitNode *target
+)
 {
     if (!current)
     {
@@ -1022,7 +1042,7 @@ SplitLayoutImpl::FindNodeRecursive(
 }
 
 void
-SplitLayoutImpl::CollectRcssPaths(const SplitNode* node, std::set<std::string>& paths) const
+SplitLayoutImpl::CollectRcssPaths(const SplitNode *node, std::set<std::string> &paths) const
 {
     if (!node)
     {
@@ -1033,7 +1053,7 @@ SplitLayoutImpl::CollectRcssPaths(const SplitNode* node, std::set<std::string>& 
     {
         if (!node->editor_name.empty() && editor_registry_)
         {
-            const EditorDescriptor* desc = editor_registry_->GetDescriptor(node->editor_name);
+            const EditorDescriptor *desc = editor_registry_->GetDescriptor(node->editor_name);
             if (desc && !desc->rcss_path.empty())
             {
                 paths.insert(desc->rcss_path);
@@ -1048,7 +1068,7 @@ SplitLayoutImpl::CollectRcssPaths(const SplitNode* node, std::set<std::string>& 
 }
 
 std::string
-SplitLayoutImpl::MakeInstanceId(const SplitNode* node) const
+SplitLayoutImpl::MakeInstanceId(const SplitNode *node) const
 {
     return node->editor_name + "_" + std::to_string(reinterpret_cast<uintptr_t>(node));
 }

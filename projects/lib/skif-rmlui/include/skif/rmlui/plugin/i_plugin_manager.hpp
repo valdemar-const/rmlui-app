@@ -23,12 +23,13 @@ namespace skif::rmlui
  */
 class IPluginManager : public IPluginRegistry
 {
-public:
+  public:
+
     /// Установить реестр представлений (deprecated — используйте SetEditorRegistry)
-    virtual void SetViewRegistry(IViewRegistry* registry) = 0;
+    virtual void SetViewRegistry(IViewRegistry *registry) = 0;
 
     /// Установить реестр редакторов
-    virtual void SetEditorRegistry(IEditorRegistry* registry) = 0;
+    virtual void SetEditorRegistry(IEditorRegistry *registry) = 0;
 
     /// Инициализировать менеджер плагинов
     virtual bool Initialize() noexcept = 0;

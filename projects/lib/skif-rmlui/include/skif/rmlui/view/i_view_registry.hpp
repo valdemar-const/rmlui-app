@@ -16,7 +16,8 @@ namespace skif::rmlui
  */
 class IViewRegistry
 {
-public:
+  public:
+
     virtual ~IViewRegistry() = default;
 
     /// Зарегистрировать представление
@@ -26,14 +27,14 @@ public:
     [[nodiscard]] virtual std::unique_ptr<IView> CreateView(std::string_view name) const = 0;
 
     /// Получить дескриптор представления
-    [[nodiscard]] virtual const ViewDescriptor* GetDescriptor(std::string_view name) const = 0;
+    [[nodiscard]] virtual const ViewDescriptor *GetDescriptor(std::string_view name) const = 0;
 
     /// Получить все дескрипторы
-    [[nodiscard]] virtual std::vector<const ViewDescriptor*> GetAllDescriptors() const = 0;
+    [[nodiscard]] virtual std::vector<const ViewDescriptor *> GetAllDescriptors() const = 0;
 
     /// Получить дескрипторы по категории
-    [[nodiscard]] virtual std::vector<const ViewDescriptor*> GetDescriptorsByCategory(
-        std::string_view category
+    [[nodiscard]] virtual std::vector<const ViewDescriptor *> GetDescriptorsByCategory(
+            std::string_view category
     ) const = 0;
 
     /// Получить список категорий

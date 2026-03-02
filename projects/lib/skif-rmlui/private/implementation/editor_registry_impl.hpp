@@ -17,21 +17,23 @@ namespace skif::rmlui
  */
 class EditorRegistryImpl final : public IEditorRegistry
 {
-public:
-    EditorRegistryImpl() = default;
+  public:
+
+    EditorRegistryImpl()           = default;
     ~EditorRegistryImpl() override = default;
 
     // IEditorRegistry
-    void RegisterEditor(EditorDescriptor descriptor, EditorFactory factory) override;
-    [[nodiscard]] std::unique_ptr<IEditor> CreateEditor(std::string_view name) const override;
-    [[nodiscard]] const EditorDescriptor* GetDescriptor(std::string_view name) const override;
-    [[nodiscard]] std::vector<const EditorDescriptor*> GetAllDescriptors() const override;
-    [[nodiscard]] std::vector<const EditorDescriptor*> GetDescriptorsByCategory(
-        std::string_view category
+    void                                                RegisterEditor(EditorDescriptor descriptor, EditorFactory factory) override;
+    [[nodiscard]] std::unique_ptr<IEditor>              CreateEditor(std::string_view name) const override;
+    [[nodiscard]] const EditorDescriptor               *GetDescriptor(std::string_view name) const override;
+    [[nodiscard]] std::vector<const EditorDescriptor *> GetAllDescriptors() const override;
+    [[nodiscard]] std::vector<const EditorDescriptor *> GetDescriptorsByCategory(
+            std::string_view category
     ) const override;
     [[nodiscard]] std::vector<std::string> GetCategories() const override;
 
-private:
+  private:
+
     struct EditorEntry
     {
         EditorDescriptor descriptor;

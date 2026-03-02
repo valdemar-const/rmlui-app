@@ -26,14 +26,15 @@ class IEditorRegistry;
  */
 class PanelContainerController
 {
-public:
+  public:
+
     PanelContainerController(
-        ISplitLayout& layout,
-        IEditorHost& editor_host,
-        IEditorRegistry& registry,
-        const SplitNode* node,
-        Rml::Element* container_element,
-        std::string instance_id
+            ISplitLayout    &layout,
+            IEditorHost     &editor_host,
+            IEditorRegistry &registry,
+            const SplitNode *node,
+            Rml::Element    *container_element,
+            std::string      instance_id
     );
 
     ~PanelContainerController();
@@ -45,26 +46,35 @@ public:
     void UpdateStatusBar();
 
     /// Получить instance_id
-    [[nodiscard]] const std::string& GetInstanceId() const noexcept { return instance_id_; }
+    [[nodiscard]] const std::string &
+    GetInstanceId() const noexcept
+    {
+        return instance_id_;
+    }
 
     /// Получить связанный SplitNode
-    [[nodiscard]] const SplitNode* GetNode() const noexcept { return node_; }
+    [[nodiscard]] const SplitNode *
+    GetNode() const noexcept
+    {
+        return node_;
+    }
 
-private:
+  private:
+
     /// Обработчик смены редактора в dropdown
-    void OnEditorSwitcherChange(Rml::Event& event);
+    void OnEditorSwitcherChange(Rml::Event &event);
 
     /// Обработчик mousedown на hot corner
-    void OnHotCornerMouseDown(Rml::Event& event, std::string_view action);
+    void OnHotCornerMouseDown(Rml::Event &event, std::string_view action);
 
     /// Обработчик клика по menu item
-    void OnMenuItemClick(Rml::Event& event);
+    void OnMenuItemClick(Rml::Event &event);
 
-    ISplitLayout&    layout_;
-    IEditorHost&     editor_host_;
-    IEditorRegistry& registry_;
-    const SplitNode* node_;
-    Rml::Element*    container_;
+    ISplitLayout    &layout_;
+    IEditorHost     &editor_host_;
+    IEditorRegistry &registry_;
+    const SplitNode *node_;
+    Rml::Element    *container_;
     std::string      instance_id_;
 };
 

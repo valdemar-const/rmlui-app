@@ -13,11 +13,13 @@ namespace skif::rmlui
 /// Безопасен после уничтожения Signal — использует weak_ptr.
 class Connection
 {
-public:
+  public:
+
     Connection() = default;
-    
+
     /// Отключить подписку
-    void Disconnect()
+    void
+    Disconnect()
     {
         if (auto state = state_.lock())
         {
@@ -33,9 +35,10 @@ public:
             disconnect_fn_ = nullptr;
         }
     }
-    
+
     /// Проверить, активна ли подписка
-    [[nodiscard]] bool IsConnected() const noexcept
+    [[nodiscard]] bool
+    IsConnected() const noexcept
     {
         if (!disconnect_fn_)
         {
@@ -44,18 +47,20 @@ public:
         return !state_.expired();
     }
 
-private:
-    template<typename...> friend class Signal;
-    
+  private:
+
+    template<typename...>
+    friend class Signal;
+
     struct StateBase
     {
         virtual ~StateBase() = default;
     };
-    
-    using DisconnectFn = std::function<void(std::shared_ptr<StateBase>&)>;
-    
+
+    using DisconnectFn = std::function<void(std::shared_ptr<StateBase> &)>;
+
     std::weak_ptr<StateBase> state_;
-    DisconnectFn disconnect_fn_;
+    DisconnectFn             disconnect_fn_;
 };
 
 /// Сигнал с поддержкой безопасного disconnect.
@@ -64,75 +69,88 @@ private:
 template<typename... Args>
 class Signal
 {
-public:
+  public:
+
     using Callback = std::function<void(Args...)>;
-    
-    Signal() : state_(std::make_shared<State>()) {}
-    
+
+    Signal()
+        : state_(std::make_shared<State>())
+    {
+    }
+
     // Некопируемый, но перемещаемый
-    Signal(const Signal&) = delete;
-    Signal& operator=(const Signal&) = delete;
-    Signal(Signal&&) noexcept = default;
-    Signal& operator=(Signal&&) noexcept = default;
-    
+    Signal(const Signal &)                = delete;
+    Signal &operator=(const Signal &)     = delete;
+    Signal(Signal &&) noexcept            = default;
+    Signal &operator=(Signal &&) noexcept = default;
+
     /// Подключить callback и получить Connection для отключения
-    [[nodiscard]] Connection Connect(Callback callback)
+    [[nodiscard]] Connection
+    Connect(Callback callback)
     {
         const auto id = state_->next_id++;
         state_->slots.push_back({id, std::move(callback)});
-        
+
         Connection conn;
-        conn.state_ = state_;
-        conn.disconnect_fn_ = [id](std::shared_ptr<Connection::StateBase>& base_state)
+        conn.state_         = state_;
+        conn.disconnect_fn_ = [id](std::shared_ptr<Connection::StateBase> &base_state)
         {
-            auto* state = static_cast<State*>(base_state.get());
-            std::erase_if(state->slots, [id](const Slot& s) { return s.id == id; });
+            auto *state = static_cast<State *>(base_state.get());
+            std::erase_if(state->slots, [id](const Slot &s)
+                          {
+                              return s.id == id;
+                          });
         };
         return conn;
     }
-    
+
     /// Вызвать все подключённые callbacks
-    void operator()(Args... args) const
+    void
+    operator()(Args... args) const
     {
         // Копируем на случай модификации во время итерации
         auto slots_copy = state_->slots;
-        for (const auto& slot : slots_copy)
+        for (const auto &slot : slots_copy)
         {
             slot.callback(args...);
         }
     }
-    
+
     /// Отключить все подписки
-    void DisconnectAll()
+    void
+    DisconnectAll()
     {
         state_->slots.clear();
     }
-    
+
     /// Проверить, есть ли подписчики
-    [[nodiscard]] bool Empty() const noexcept
+    [[nodiscard]] bool
+    Empty() const noexcept
     {
         return state_->slots.empty();
     }
-    
+
     /// Получить количество подписчиков
-    [[nodiscard]] std::size_t Size() const noexcept
+    [[nodiscard]] std::size_t
+    Size() const noexcept
     {
         return state_->slots.size();
     }
 
-private:
+  private:
+
     struct Slot
     {
         uint64_t id;
         Callback callback;
     };
-    
+
     struct State : Connection::StateBase
     {
         std::vector<Slot> slots;
-        uint64_t next_id = 0;
+        uint64_t          next_id = 0;
     };
-    
+
     std::shared_ptr<State> state_;
 };
 

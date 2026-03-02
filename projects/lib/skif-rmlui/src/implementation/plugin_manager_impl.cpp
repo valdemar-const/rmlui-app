@@ -12,13 +12,13 @@ PluginManagerImpl::~PluginManagerImpl()
 }
 
 void
-PluginManagerImpl::SetViewRegistry(IViewRegistry* registry)
+PluginManagerImpl::SetViewRegistry(IViewRegistry *registry)
 {
     view_registry_ = registry;
 }
 
 void
-PluginManagerImpl::SetEditorRegistry(IEditorRegistry* registry)
+PluginManagerImpl::SetEditorRegistry(IEditorRegistry *registry)
 {
     editor_registry_ = registry;
 }
@@ -73,7 +73,7 @@ PluginManagerImpl::UnloadPlugin(std::string_view name)
 void
 PluginManagerImpl::StartPlugins()
 {
-    for (auto& [name, entry] : plugins_)
+    for (auto &[name, entry] : plugins_)
     {
         if (!entry.started)
         {
@@ -86,7 +86,7 @@ PluginManagerImpl::StartPlugins()
 void
 PluginManagerImpl::StopPlugins() noexcept
 {
-    for (auto& [name, entry] : plugins_)
+    for (auto &[name, entry] : plugins_)
     {
         if (entry.started)
         {
@@ -105,10 +105,10 @@ PluginManagerImpl::RegisterPlugin(std::unique_ptr<IPlugin> plugin)
     }
 
     const std::string name = std::string(plugin->GetName());
-    plugins_[name] = PluginEntry{std::move(plugin), false};
+    plugins_[name]         = PluginEntry {std::move(plugin), false};
 }
 
-IPlugin*
+IPlugin *
 PluginManagerImpl::GetPlugin(std::string_view name) const
 {
     auto it = plugins_.find(std::string(name));
@@ -119,13 +119,13 @@ PluginManagerImpl::GetPlugin(std::string_view name) const
     return nullptr;
 }
 
-std::vector<IPlugin*>
+std::vector<IPlugin *>
 PluginManagerImpl::GetPlugins() const
 {
-    std::vector<IPlugin*> result;
+    std::vector<IPlugin *> result;
     result.reserve(plugins_.size());
 
-    for (const auto& [name, entry] : plugins_)
+    for (const auto &[name, entry] : plugins_)
     {
         result.push_back(entry.plugin.get());
     }
@@ -133,7 +133,7 @@ PluginManagerImpl::GetPlugins() const
     return result;
 }
 
-IViewRegistry&
+IViewRegistry &
 PluginManagerImpl::GetViewRegistry()
 {
     if (!view_registry_)
@@ -143,7 +143,7 @@ PluginManagerImpl::GetViewRegistry()
     return *view_registry_;
 }
 
-IEditorRegistry&
+IEditorRegistry &
 PluginManagerImpl::GetEditorRegistry()
 {
     if (!editor_registry_)
